@@ -1,0 +1,9 @@
+[submodule "evmc"]
+	path = evmc
+	url = https://github.com/ethereum/evmc
+[submodule "evmone"]
+	path = evmone
+	url = https://github.com/axic/evmone
+[submodule "solidity"]
+	path = solidity
+	url = https://github.com/ethereum/solidity
