@@ -7,36 +7,36 @@
         mstore(add(dst, 32), lo)
     }
 
-    function f2m_mul(x_offset, y_offset, modulus, inv, mem) {
+    function f2m_mul(x_0_offset, x_1_offset, y_0_offset, y_1_offset, modulus, inv, mem) {
         let A := mem
         let B := add(mem, 64)
         let C := add(B, 64)
         let D := add(C, 64)
 
         // A <- x_0 * y_0
-        memcpy_384(A, x_offset)
-        mulmodmont384(A, y_offset, modulus, inv)
+        memcpy_384(A, x_0_offset)
+        mulmodmont384(A, y_0_offset, modulus, inv)
 
         // B <- x_1 * y_1
-        memcpy_384(B, add(x_offset, 64))
-        mulmodmont384(B, add(y_offset, 64), modulus, inv)
+        memcpy_384(B, x_1_offset)
+        mulmodmont384(B, y_1_offset, modulus, inv)
 
         // C <- x_0 + x_1
-        memcpy_384(C, x_offset)
-        addmod384(C, add(x_offset, 64), modulus)
+        memcpy_384(C, x_0_offset)
+        addmod384(C, x_1_offset, modulus)
 
         // D <- y_0 + y_1
-        memcpy_384(D, y_offset)
-        addmod384(D, add(y_offset, 64), modulus)
+        memcpy_384(D, y_0_offset)
+        addmod384(D, y_1_offset, modulus)
 
         // C <- D * C
         mulmodmont384(C, D, modulus, inv)
 
         // f1m_mulNonresidue = f1m_neg(val) = 0 - val 
         // x_0 <- 0 - B
-        mstore(x_offset,          0x0000000000000000000000000000000000000000000000000000000000000000)
-        mstore(add(x_offset, 32), 0x0000000000000000000000000000000000000000000000000000000000000000)
-        submod384(x_offset, B, modulus)
+        mstore(x_0_offset,          0x0000000000000000000000000000000000000000000000000000000000000000)
+        mstore(add(x_0_offset, 32), 0x0000000000000000000000000000000000000000000000000000000000000000)
+        submod384(x_0_offset, B, modulus)
 
         // B <- A + B
         addmod384(B, A, modulus)
@@ -45,8 +45,8 @@
         submod384(C, B, modulus)
 
         // x_1 <- C
-        memcpy_384(add(x_offset, 64), C)
-        return(add(x_offset, 64), 64)
+        memcpy_384(x_1_offset, C)
+        return(x_1_offset, 64)
 
         // TODO: use x_1 instead of tmp variable C (to reduce memory usage) if possible
     }
@@ -85,5 +85,5 @@
 
     let mem := msize()
 
-    f2m_mul(x_offset, y_offset, bls12_mod, bls12_r_inv, mem)
+    f2m_mul(x_offset, add(x_offset, 64), y_offset, add(y_offset, 64), bls12_mod, bls12_r_inv, mem)
 }
