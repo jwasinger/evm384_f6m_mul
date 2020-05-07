@@ -1,2 +1,2 @@
 #! /usr/bin/env bash
-solidity/build/solc/solc  --strict-assembly f6m.yul
+solidity/build/solc/solc --strict-assembly --optimize f6m.yul
