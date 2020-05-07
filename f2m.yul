@@ -49,6 +49,39 @@
         return(x_1_offset, 64)
 
         // TODO: use x_1 instead of tmp variable C (to reduce memory usage) if possible
+
+        // x_0 <- 0 - (x_1 * y_1)
+        // x_1 <- (y_0 * y_1 * (x_0 + x_1)) - (x_0 * y_0 + x_1 * y_1)
+
+        // tmp <- x_1 * y_1
+        // tmp1 <- x_0
+        // x_0 <- tmp1 - tmp
+
+        // tmp1 <- tmp1 * y_0
+        // tmp3 <- tmp * tmp1
+
+        // tmp1 <- x_0
+        // x_0 <- x_0 + x_1
+        // x_0 <- x_0 * y_1
+        // x_0 <- x_0 * y_0
+        // x_0 <- x_0 - 
+    }
+
+    function f2m_add(x_0, x_1, y_0, y_1, r_0, r_1, modulus)  {
+        /*
+        r_0 <- x_0 + y_0
+        r_1 <- x_1 + y_1
+        */
+    }
+
+    function f2m_sub(x_0, x_1, y_0, y_1) {
+            /*
+            c.call(f1mPrefix+"_sub", x0, y0, r0),
+            c.call(f1mPrefix+"_sub", x1, y1, r1),
+            */
+
+            //r_0 <- x_0 - y_0
+            //r_1 <- x_1 - y_1
     }
 
     let x_offset := msize()
