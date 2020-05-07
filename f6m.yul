@@ -1,39 +1,97 @@
 {
+    function memcpy_384(dst, src) {
+        let hi := mload(src)
+        let lo := mload(add(src, 32))
+        mstore(dst, hi)
+        mstore(add(dst, 32), lo)
+    }
+
+    // r <- x + y
+    function f2m_add(x_0, x_1, y_0, y_1, r_0, r_1, modulus) {
+        // r_0 <- x_0 + y_0
+        // r_1 <- x_1 + y_1
+        memcpy_384(r_0, x_0)
+        memcpy_384(r_1, x_1)
+        addmod384(r_0, y_0, modulus)
+        addmod384(r_1, y_1, modulus)
+    }
+
+    // r <- x - y
+    function f2m_sub(x_0, x_1, y_0, y_1, r_0, r_1, modulus) {
+        memcpy_384(r_0, x_0)
+        memcpy_384(r_1, x_1)
+        submod384(r_0, y_0, modulus)
+        submod384(r_1, y_1, modulus)
+    }
+
+    // r <- x * y
+    function f2m_mul(x_0_offset, x_1_offset, y_0_offset, y_1_offset, r_0, r_1, modulus, inv, mem) {
+        let A := mem
+        let B := add(mem, 64)
+        let C := add(B, 64)
+        let D := add(C, 64)
+
+        // TODO cover case where r == x or r == y
+
+        // A <- x_0 * y_0
+        memcpy_384(A, x_0_offset)
+        mulmodmont384(A, y_0_offset, modulus, inv)
+
+        // B <- x_1 * y_1
+        memcpy_384(B, x_1_offset)
+        mulmodmont384(B, y_1_offset, modulus, inv)
+
+        // C <- x_0 + x_1
+        memcpy_384(C, x_0_offset)
+        addmod384(C, x_1_offset, modulus)
+
+        // D <- y_0 + y_1
+        memcpy_384(D, y_0_offset)
+        addmod384(D, y_1_offset, modulus)
+
+        // C <- D * C
+        mulmodmont384(C, D, modulus, inv)
+
+        // f1m_mulNonresidue = f1m_neg(val) = 0 - val 
+        // r_0 <- 0 - B
+        mstore(x_0_offset,          0x0000000000000000000000000000000000000000000000000000000000000000)
+        mstore(add(x_0_offset, 32), 0x0000000000000000000000000000000000000000000000000000000000000000)
+        submod384(r_0, B, modulus)
+
+        // B <- A + B
+        addmod384(B, A, modulus)
+
+        // C <- C - B 
+        submod384(C, B, modulus)
+
+        // r_1 <- C
+        memcpy_384(r_1, C)
+        //return(x_1_offset, 64)
+
+        // TODO: use x_1 instead of tmp variable C (to reduce memory usage) if possible
+
+        // x_0 <- 0 - (x_1 * y_1)
+        // x_1 <- (y_0 * y_1 * (x_0 + x_1)) - (x_0 * y_0 + x_1 * y_1)
+
+        // tmp <- x_1 * y_1
+        // tmp1 <- x_0
+        // x_0 <- tmp1 - tmp
+
+        // tmp1 <- tmp1 * y_0
+        // tmp3 <- tmp * tmp1
+
+        // tmp1 <- x_0
+        // x_0 <- x_0 + x_1
+        // x_0 <- x_0 * y_1
+        // x_0 <- x_0 * y_0
+        // x_0 <- x_0 - 
+    }
+
 	// R <- abc * ABC
-	function f6m_mul(a_0,   a_1,   b_0,   b_1,   c_0,   c_1,
-					 A_0,   A_1,   B_0,   B_1,   C_0,   C_1,
-					 r_0_0, r_0_1, r_1_0, r_1_1, r_2_0, r_2_1,
+	function f6m_mul(x,
+					 y,
+					 r, 
 					 inv, modulus) {
-	/*
-            cd.call(f1mPrefix + "_mul", a, A, aA),
-            cd.call(f1mPrefix + "_mul", b, B, bB),
-            cd.call(f1mPrefix + "_mul", c, C, cC),
-
-            cd.call(f1mPrefix + "_add", a, b, a_b),
-            cd.call(f1mPrefix + "_add", A, B, A_B),
-            cd.call(f1mPrefix + "_add", a, c, a_c),
-            cd.call(f1mPrefix + "_add", A, C, A_C),
-            cd.call(f1mPrefix + "_add", b, c, b_c),
-            cd.call(f1mPrefix + "_add", B, C, B_C),
-
-            cd.call(f1mPrefix + "_add", aA, bB, aA_bB),
-            cd.call(f1mPrefix + "_add", aA, cC, aA_cC),
-            cd.call(f1mPrefix + "_add", bB, cC, bB_cC),
-
-            cd.call(f1mPrefix + "_mul", b_c, B_C, r0),
-            cd.call(f1mPrefix + "_sub", r0, bB_cC, r0),
-            cd.call(mulNonResidueFn, r0, r0),
-            cd.call(f1mPrefix + "_add", aA, r0, r0),
-
-            cd.call(f1mPrefix + "_mul", a_b, A_B, r1),
-            cd.call(f1mPrefix + "_sub", r1, aA_bB, r1),
-            cd.call(mulNonResidueFn, cC, AUX),
-            cd.call(f1mPrefix + "_add", r1, AUX, r1),
-
-            cd.call(f1mPrefix + "_mul", a_c, A_C, r2),
-            cd.call(f1mPrefix + "_sub", r2, aA_cC, r2),
-            cd.call(f1mPrefix + "_add", r2, bB, r2),
-	*/
     /*
 
         f6m_pseudocode:
@@ -47,11 +105,10 @@
         A_C = A + C
         b_c = b + c
         B_C = B + C
-        */
+    */
 
 
-
-        /*
+    /*
         aA_bB = aA + bB
         aA_cC = aA + cC
         bB_cC = bB + cC
@@ -70,28 +127,41 @@
         r_2 = a_c + A_C
         r_2 = r_2 - aA_cC
         r_2 = r_2 + bB
-
     */
 
+ 
+    	let mem_end := msize()
+
+		let aA_0 := mem_end
+		let aA_1 := add(aA_0, 64)
+
+		let bB_0 := add(aA_1, 64)
+		let bB_1 := add(bB_0, 64)
+
+		let cC_0 := add(bB_1, 64)
+		let cC_1 := add(cC_0, 64)
+
+		let arena := add(cC_1, 64)
+		// all memory after 'arena' should be unused
+
+		// aA <- a * A
+		f2m_mul(x, add(x, 64), y, add(y, 64), aA_0, aA_1, inv, modulus, arena)
+
+		/*
+		// r2 = aA + cC + bB
+		f2m_mul(b_0, b_1, B_0, B_1, bB_0, bB_1)
+		f2m_mul(c_0, c_1, C_0, C_1, cC_0, cC_1)
+
+		f2m_add(aA_0, aA_1, bB_0, bB_1, r_0_0, r_0_1)
+		f2m_add(r_0_0, r_0_1, cC_0, cC_1, r_0_0, r_0_1)
+		*/
+
+	/*
 	    r2 = aA + cC + bB
 	    r1 = ((a_b * A_B) - aA_bB) + mulNonResidue(cC)
 	    r0 = aA + mulNonResidue((b_c + B_C) - bBcC)
+    */
 	}
 
-	let aA := &bytes[0x00..0]
-	let bB := &bytes[0x00..0]
-	let cC := &bytes[0x00..0]
-
-	/*
-	tmp variables defined here
-	*/
-
-	let arena := &bytes[0x00...0]
-
-	f2m_mul(a_0, a_1, A_0, A_1, aA_0, aA_1)
-	f2m_mul(b_0, b_1, B_0, B_1, bB_0, bB_1)
-	f2m_mul(c_0, c_1, C_0, C_1, cC_0, cC_1)
-
-	f2m_add(aA_0, aA_1, bB_0, bB_1, r_0_0, r_0_1)
-	f2m_add(r_0_0, r_0_1, cC_0, cC_1, r_0_0, r_0_1)
+	// TODO: an f6m test case
 }
