@@ -69,47 +69,7 @@
     }
 
 	// R <- abc * ABC
-	function f6m_mul(x_0, x_1, x_2,
-					 y_0, y_1, y_2,
-					 r_0, r_1, r_2, 
-					 inv, modulus, arena) {
-    /*
-
-        f6m_pseudocode:
-         
-        aA = a * A
-        bB = b * B
-        cC = c * C
-        a_b = a + b
-        A_B = A + B
-        a_c = a + c
-        A_C = A + C
-        b_c = b + c
-        B_C = B + C
-    */
-
-
-    /*
-        aA_bB = aA + bB
-        aA_cC = aA + cC
-        bB_cC = bB + cC
-
-        r_0 = b_c + B_C
-        r_0 = r_0 - bB_cC
-
-        r_0 = mulNonResidue(r_0)
-        r_0 = aA + r_0
-        
-        r_1 = a_b * A_B
-        r_1 = r_1 - aA_bB
-        AUX = mulNonResidue(cC)
-        r_1 = r_1 + AUX
-
-        r_2 = a_c + A_C
-        r_2 = r_2 - aA_cC
-        r_2 = r_2 + bB
-    */
-
+	function f6m_mul(abc, ABC, r, inv, modulus, arena) {
 		let aA_0 := arena
 		let aA_1 := add(aA_0, 64)
 
@@ -122,28 +82,43 @@
 		arena := add(cC_1, 64)
 		// all memory after 'arena' should be unused
 
+        /*
+        abc:
+        a_0 => abc
+        a_1 => add(abc, 64)
+
+        b_0 => add(abc, 128)
+        b_1 => add(abc, 192)
+
+        c_0 => add(abc, 256)
+        c_1 => add(abc, 320)
+
+        */
+
 		// aA <- a * A
-    	f2m_mul(x_0, add(x_0, 64), y_0, add(y_0, 64), aA_0, aA_1, inv, modulus, arena)
+    	f2m_mul(abc, add(abc, 64), ABC, add(ABC, 64), aA_0, aA_1, inv, modulus, arena)
 
         // bB <- b * B
-        f2m_mul(x_1, add(x_1, 64), y_1, add(y_1, 64), bB_0, bB_1, inv, modulus, arena)
+        f2m_mul(add(abc, 128), add(abc, 192), add(ABC, 128), add(ABC, 192), bB_0, bB_1, inv, modulus, arena)
 
         // cC <- c * C
+        f2m_mul(add(abc, 256), add(abc, 320), add(ABC, 256), add(ABC, 320), cC_0, cC_1, inv, modulus, arena)
 
-		/*
-		// r2 = aA + cC + bB
-		f2m_mul(b_0, b_1, B_0, B_1, bB_0, bB_1)
-		f2m_mul(c_0, c_1, C_0, C_1, cC_0, cC_1)
+        /* 
+        r2 = aA + cC + bB
+        */
 
-		f2m_add(aA_0, aA_1, bB_0, bB_1, r_0_0, r_0_1)
-		f2m_add(r_0_0, r_0_1, cC_0, cC_1, r_0_0, r_0_1)
-		*/
+        // r2 <- aA + bB
 
-	/*
-	    r2 = aA + cC + bB
-	    r1 = ((a_b * A_B) - aA_bB) + mulNonResidue(cC)
-	    r0 = aA + mulNonResidue((b_c + B_C) - bBcC)
-    */
+        // r2 <- r2 + cC
+
+        /*
+        r1 = ((a_b * A_B) - aA_bB) + mulNonResidue(cC)
+        */
+
+        /*
+        r0 = aA + mulNonResidue((b_c + B_C) - bBcC)
+        */
 	}
 
     let a := msize()
@@ -194,5 +169,5 @@
 
     let bls12_r_inv :=         0x89f3fffcfffcfffd
 
-    f6m_mul(a, b, c, A, B, C, r_0, r_1, r_2, bls12_mod, bls12_r_inv, add(bls12_mod, 128)) 
+    f6m_mul(a, A, r_0, bls12_mod, bls12_r_inv, add(bls12_mod, 128)) 
 }
