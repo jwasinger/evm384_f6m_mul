@@ -7,7 +7,7 @@
     }
 
     // r <- x + y
-    function f2m_add(x_0, x_1, y_0, y_1, r_0, r_1, modulus) {
+    function f2m_add(x_0, x_1, y_0, y_1, r_0, r_1, modulus, arena) {
         // r_0 <- x_0 + y_0
         // r_1 <- x_1 + y_1
         memcpy_384(r_0, x_0)
@@ -17,7 +17,7 @@
     }
 
     // r <- x - y
-    function f2m_sub(x_0, x_1, y_0, y_1, r_0, r_1, modulus) {
+    function f2m_sub(x_0, x_1, y_0, y_1, r_0, r_1, modulus, arena) {
         memcpy_384(r_0, x_0)
         memcpy_384(r_1, x_1)
         submod384(r_0, y_0, modulus)
@@ -79,7 +79,11 @@
 		let cC_0 := add(bB_1, 64)
 		let cC_1 := add(cC_0, 64)
 
-		arena := add(cC_1, 64)
+        // ^ TODO, make these f2 elements for consistency with the rest of this function
+
+        let tmp1 := add(cC_1, 64)
+
+		arena := add(tmp1, 128)
 		// all memory after 'arena' should be unused
 
         /*
@@ -92,6 +96,13 @@
 
         c_0 => add(abc, 256)
         c_1 => add(abc, 320)
+
+        r_0_0  => r
+        r_0_1 => add(r, 64)
+        r_1_0 => add(r, 128)
+        r_1_1 => add(r, 192)
+        r_2_0 => add(r, 256)
+        r_2_1 => add(r, 320)
 
         */
 
@@ -109,16 +120,36 @@
         */
 
         // r2 <- aA + bB
+        f2m_add(bB_0, bB_1, aA_0, aA_1, add(r, 256), add(r, 320), modulus, arena)
 
         // r2 <- r2 + cC
+        f2m_add(add(r, 256), add(r, 320), cC_0, cC_1, add(r, 256), add(r, 320), modulus, arena)
 
         /*
         r1 = ((a_b * A_B) - aA_bB) + mulNonResidue(cC)
         */
 
+        // r_1 <- a * b
+        f2m_mul(add(r, 128), add(r, 192), abc, add(abc, 64), add(abc, 128), add(abc, 192), inv, modulus, arena)
+
+        // tmp1 <- A * B
+        // r_1 <- r_1 * tmp1
+        // tmp1 <- aA * bB
+        // r_1 <- r_1 - tmp1
+        // tmp1 <- mulNonResidue(cC)
+        // r_1 <- r_1 - tmp1
+
         /*
         r0 = aA + mulNonResidue((b_c + B_C) - bBcC)
         */
+
+        // r_0 <- b * c
+        // tmp1 <- B * C
+        // r_0 <- r_0 + tmp1
+        // tmp1 <- bB * cC
+        // r_0 <- r_0 - tmp1
+        // r_0 <- mulNonResidue(r_0)
+        // r_0 <- aA + r_0
 	}
 
     let a := msize()
