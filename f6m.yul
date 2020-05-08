@@ -130,14 +130,25 @@
         */
 
         // r_1 <- a * b
-        f2m_mul(add(r, 128), add(r, 192), abc, add(abc, 64), add(abc, 128), add(abc, 192), inv, modulus, arena)
+        f2m_mul(abc, add(abc, 64), add(abc, 128), add(abc, 192), add(r, 128), add(r, 192), inv, modulus, arena)
 
         // tmp1 <- A * B
+        f2m_mul(ABC, add(ABC, 64), add(ABC, 128), add(ABC, 192), tmp1, add(tmp1, 64), inv, modulus, arena)
+
         // r_1 <- r_1 * tmp1
+        f2m_mul(add(r, 128), add(r, 192), tmp1, add(tmp1, 64), tmp1, add(tmp1, 64), inv, modulus, arena)
+
         // tmp1 <- aA * bB
+        f2m_mul(aA_0, aA_1, bB_0, bB_1, tmp1, add(tmp1, 64), inv, modulus, arena)
+
         // r_1 <- r_1 - tmp1
+        f2m_sub(add(r, 128), add(r, 192), tmp1, add(tmp1, 64), add(r, 128), add(r, 192), modulus, arena)
+
         // tmp1 <- mulNonResidue(cC)
+        //TODO
+
         // r_1 <- r_1 - tmp1
+        f2m_sub(add(r, 128), add(r, 192), tmp1, add(tmp1, 64), add(r, 128), add(r, 192), modulus, arena)
 
         /*
         r0 = aA + mulNonResidue((b_c + B_C) - bBcC)
