@@ -10,6 +10,9 @@
     function f2m_add(x_0, x_1, y_0, y_1, r_0, r_1, modulus, arena) {
         // r_0 <- x_0 + y_0
         // r_1 <- x_1 + y_1
+
+        // TODO cover case where r == x or r == y
+
         memcpy_384(r_0, x_0)
         memcpy_384(r_1, x_1)
         addmod384(r_0, y_0, modulus)
@@ -18,6 +21,9 @@
 
     // r <- x - y
     function f2m_sub(x_0, x_1, y_0, y_1, r_0, r_1, modulus, arena) {
+
+        // TODO cover case where r == x or r == y
+
         memcpy_384(r_0, x_0)
         memcpy_384(r_1, x_1)
         submod384(r_0, y_0, modulus)
@@ -79,7 +85,7 @@
 		let cC_0 := add(bB_1, 64)
 		let cC_1 := add(cC_0, 64)
 
-        // ^ TODO, make these f2 elements for consistency with the rest of this function
+        // ^ TODO, make aA, bB, cC pointers to f2 elements for consistency with the rest of this function
 
         let tmp1 := add(cC_1, 64)
 
@@ -155,12 +161,24 @@
         */
 
         // r_0 <- b * c
+        f2m_mul(add(abc, 128), add(abc, 192), add(abc, 256), add(abc, 320), r, add(r, 64), inv, modulus, arena)
         // tmp1 <- B * C
+        f2m_mul(add(ABC, 128), add(ABC, 192), add(ABC, 256), add(ABC, 320), tmp1, add(tmp1, 64), inv, modulus, arena)
+
         // r_0 <- r_0 + tmp1
+        f2m_add(r, add(r, 64), tmp1, add(tmp1, 64), r, add(r, 64), modulus, arena)
+
         // tmp1 <- bB * cC
+        f2m_mul(bB_0, bB_1, cC_0, cC_1, tmp1, add(tmp1, 64), inv, modulus, arena)
+
         // r_0 <- r_0 - tmp1
+        f2m_sub(r, add(r, 64), tmp1, add(tmp1, 64), r, add(r, 64), modulus, arena)
+
         // r_0 <- mulNonResidue(r_0)
+        // TODO
+
         // r_0 <- aA + r_0
+        f2m_add(r, add(r, 64), aA_0, aA_1, r, add(r, 64), modulus, arena)
 	}
 
     let a := msize()
