@@ -7,6 +7,25 @@
         mstore(add(dst, 32), lo)
     }
 
+    // r <- x + y
+    function f2m_add(x_0, x_1, y_0, y_1, r_0, r_1, modulus) {
+        // r_0 <- x_0 + y_0
+        // r_1 <- x_1 + y_1
+        memcpy_384(r_0, x_0)
+        memcpy_384(r_1, x_1)
+        addmod384(r_0, y_0, modulus)
+        addmod384(r_1, y_1, modulus)
+    }
+
+    // r <- x - y
+    function f2m_sub(x_0, x_1, y_0, y_1, r_0, r_1, modulus) {
+        memcpy_384(r_0, x_0)
+        memcpy_384(r_1, x_1)
+        submod384(r_0, y_0, modulus)
+        submod384(r_1, y_1, modulus)
+    }
+
+    // r <- x * y
     function f2m_mul(x_0_offset, x_1_offset, y_0_offset, y_1_offset, r_0, r_1, modulus, inv, mem) {
         let A := mem
         let B := add(mem, 64)
@@ -67,23 +86,6 @@
         // x_0 <- x_0 * y_1
         // x_0 <- x_0 * y_0
         // x_0 <- x_0 - 
-    }
-
-    function f2m_add(x_0, x_1, y_0, y_1, r_0, r_1, modulus)  {
-        /*
-        r_0 <- x_0 + y_0
-        r_1 <- x_1 + y_1
-        */
-    }
-
-    function f2m_sub(x_0, x_1, y_0, y_1) {
-            /*
-            c.call(f1mPrefix+"_sub", x0, y0, r0),
-            c.call(f1mPrefix+"_sub", x1, y1, r1),
-            */
-
-            //r_0 <- x_0 - y_0
-            //r_1 <- x_1 - y_1
     }
 
     let x_offset := msize()
