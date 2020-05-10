@@ -60,8 +60,8 @@
 
         // f1m_mulNonresidue = f1m_neg(val) = 0 - val 
         // r_0 <- 0 - B
-        mstore(x_0_offset,          0x0000000000000000000000000000000000000000000000000000000000000000)
-        mstore(add(x_0_offset, 32), 0x0000000000000000000000000000000000000000000000000000000000000000)
+        mstore(r_0,          0x0000000000000000000000000000000000000000000000000000000000000000)
+        mstore(add(r_0, 32), 0x0000000000000000000000000000000000000000000000000000000000000000)
         submod384(r_0, B, modulus)
 
         // r_0 <- r_0 + A
@@ -127,14 +127,37 @@
         f2m_mul(add(abc, 256), add(abc, 320), add(ABC, 256), add(ABC, 320), cC_0, cC_1, modulus, inv, arena)
 
         /* 
-        r2 = aA + cC + bB
+            r_2 <- ((a + c) * (A + C) - (a * A + c * C)) + bB
+            
+            tmp1 <- a + c
+            r_2  <- A + C
+            r_2 <- r_2 * tmp1
+            
+            tmp1 <- aA * cC
+            r_2 <- r_2 - tmp1
+            r_2 <- r_2 + bB
         */
 
-        // r2 <- aA + bB
-        f2m_add(bB_0, bB_1, aA_0, aA_1, add(r, 256), add(r, 320), modulus, arena)
+		// tmp1 <- a + c
+        f2m_add(abc, add(abc, 64), add(abc, 256), add(abc, 320), tmp1, add(tmp1, 64), modulus, arena)
 
-        // r2 <- r2 + cC
-        f2m_add(add(r, 256), add(r, 320), cC_0, cC_1, add(r, 256), add(r, 320), modulus, arena)
+        // r_2 <- A + C
+        f2m_add(ABC, add(ABC, 64), add(ABC, 256), add(ABC, 320), add(r, 256), add(r, 320), modulus, arena)
+        
+        // r_2 <- r_2 * tmp1
+        f2m_mul(add(r, 256), add(r, 320), tmp1, add(tmp1, 64), add(r, 256), add(r, 320), modulus, inv, arena)
+
+        // results consistent up until here
+        return(add(r, 256), 128)
+
+        // tmp1 <- aA * cC
+        f2m_mul(aA_0, aA_1, cC_0, cC_1, tmp1, add(tmp1, 64), modulus, inv, arena)
+
+        // r_2 <- r_2 - tmp1
+        f2m_sub(add(r, 256), add(r, 320), tmp1, add(tmp1, 64), add(r, 256), add(r, 320), modulus, arena)
+
+        // r_2 <- r_2 + bB
+        f2m_add(add(r, 256), add(r, 320), bB_0, bB_1, add(r, 256), add(r, 320), modulus, arena)
 
         /*
         r1 = ((a_b * A_B) - aA_bB) + mulNonResidue(cC)
