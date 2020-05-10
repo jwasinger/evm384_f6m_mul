@@ -78,7 +78,7 @@
     }
 
 	// R <- abc * ABC
-	function f6m_mul(abc, ABC, r, inv, modulus, arena) {
+	function f6m_mul(abc, ABC, r, modulus, inv, arena) {
 		let aA_0 := arena
 		let aA_1 := add(aA_0, 64)
 
@@ -89,6 +89,8 @@
 		let cC_1 := add(cC_0, 64)
 
         // ^ TODO, make aA, bB, cC pointers to f2 elements for consistency with the rest of this function
+
+
 
         let tmp1 := add(cC_1, 64)
 
@@ -116,23 +118,20 @@
         */
 
 		// aA <- a * A
-    	f2m_mul(abc, add(abc, 64), ABC, add(ABC, 64), aA_0, aA_1, inv, modulus, arena)
+    	f2m_mul(abc, add(abc, 64), ABC, add(ABC, 64), aA_0, aA_1, modulus, inv, arena)
 
         // bB <- b * B
-        f2m_mul(add(abc, 128), add(abc, 192), add(ABC, 128), add(ABC, 192), bB_0, bB_1, inv, modulus, arena)
+        f2m_mul(add(abc, 128), add(abc, 192), add(ABC, 128), add(ABC, 192), bB_0, bB_1, modulus, inv, arena)
 
         // cC <- c * C
-        f2m_mul(add(abc, 256), add(abc, 320), add(ABC, 256), add(ABC, 320), cC_0, cC_1, inv, modulus, arena)
+        f2m_mul(add(abc, 256), add(abc, 320), add(ABC, 256), add(ABC, 320), cC_0, cC_1, modulus, inv, arena)
 
         /* 
         r2 = aA + cC + bB
         */
 
-        // IT BREAKS IN THIS NEXT F2M_ADD CALL
-
         // r2 <- aA + bB
         f2m_add(bB_0, bB_1, aA_0, aA_1, add(r, 256), add(r, 320), modulus, arena)
-
 
         // r2 <- r2 + cC
         f2m_add(add(r, 256), add(r, 320), cC_0, cC_1, add(r, 256), add(r, 320), modulus, arena)
@@ -142,16 +141,16 @@
         */
 
         // r_1 <- a * b
-        f2m_mul(abc, add(abc, 64), add(abc, 128), add(abc, 192), add(r, 128), add(r, 192), inv, modulus, arena)
+        f2m_mul(abc, add(abc, 64), add(abc, 128), add(abc, 192), add(r, 128), add(r, 192), modulus, inv, arena)
 
         // tmp1 <- A * B
-        f2m_mul(ABC, add(ABC, 64), add(ABC, 128), add(ABC, 192), tmp1, add(tmp1, 64), inv, modulus, arena)
+        f2m_mul(ABC, add(ABC, 64), add(ABC, 128), add(ABC, 192), tmp1, add(tmp1, 64), modulus, inv, arena)
 
         // r_1 <- r_1 * tmp1
-        f2m_mul(add(r, 128), add(r, 192), tmp1, add(tmp1, 64), tmp1, add(tmp1, 64), inv, modulus, arena)
+        f2m_mul(add(r, 128), add(r, 192), tmp1, add(tmp1, 64), tmp1, add(tmp1, 64), modulus, inv, arena)
 
         // tmp1 <- aA * bB
-        f2m_mul(aA_0, aA_1, bB_0, bB_1, tmp1, add(tmp1, 64), inv, modulus, arena)
+        f2m_mul(aA_0, aA_1, bB_0, bB_1, tmp1, add(tmp1, 64), modulus, inv, arena)
 
         // r_1 <- r_1 - tmp1
         f2m_sub(add(r, 128), add(r, 192), tmp1, add(tmp1, 64), add(r, 128), add(r, 192), modulus, arena)
@@ -167,15 +166,15 @@
         */
 
         // r_0 <- b * c
-        f2m_mul(add(abc, 128), add(abc, 192), add(abc, 256), add(abc, 320), r, add(r, 64), inv, modulus, arena)
+        f2m_mul(add(abc, 128), add(abc, 192), add(abc, 256), add(abc, 320), r, add(r, 64), modulus, inv, arena)
         // tmp1 <- B * C
-        f2m_mul(add(ABC, 128), add(ABC, 192), add(ABC, 256), add(ABC, 320), tmp1, add(tmp1, 64), inv, modulus, arena)
+        f2m_mul(add(ABC, 128), add(ABC, 192), add(ABC, 256), add(ABC, 320), tmp1, add(tmp1, 64),  modulus, inv, arena)
 
         // r_0 <- r_0 + tmp1
         f2m_add(r, add(r, 64), tmp1, add(tmp1, 64), r, add(r, 64), modulus, arena)
 
         // tmp1 <- bB * cC
-        f2m_mul(bB_0, bB_1, cC_0, cC_1, tmp1, add(tmp1, 64), inv, modulus, arena)
+        f2m_mul(bB_0, bB_1, cC_0, cC_1, tmp1, add(tmp1, 64), modulus, inv, arena)
 
         // r_0 <- r_0 - tmp1
         f2m_sub(r, add(r, 64), tmp1, add(tmp1, 64), r, add(r, 64), modulus, arena)
