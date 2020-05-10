@@ -148,10 +148,10 @@
         f2m_mul(add(r, 256), add(r, 320), tmp1, add(tmp1, 64), add(r, 256), add(r, 320), modulus, inv, arena)
 
         // results consistent up until here
-        return(add(r, 256), 128)
 
-        // tmp1 <- aA * cC
-        f2m_mul(aA_0, aA_1, cC_0, cC_1, tmp1, add(tmp1, 64), modulus, inv, arena)
+        // tmp1 <- aA + cC
+        f2m_add(aA_0, aA_1, cC_0, cC_1, tmp1, add(tmp1, 64), modulus, arena)
+
 
         // r_2 <- r_2 - tmp1
         f2m_sub(add(r, 256), add(r, 320), tmp1, add(tmp1, 64), add(r, 256), add(r, 320), modulus, arena)
