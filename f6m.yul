@@ -5,27 +5,6 @@
         mstore(dst, hi)
         mstore(add(dst, 32), lo)
     }
-/*
-    function build_mulNR2() {
-        const f = module.addFunction(f2mPrefix + "_mulNR");
-        f.addParam("x", "i32");
-        f.addParam("pr", "i32");
-
-        const c = f.getCodeBuilder();
-
-        const x0c = c.i32_const(module.alloc(f1size));
-        const x0 = c.getLocal("x");
-        const x1 = c.i32_add(c.getLocal("x"), c.i32_const(f1size));
-        const r0 = c.getLocal("pr");
-        const r1 = c.i32_add(c.getLocal("pr"), c.i32_const(f1size));
-
-        f.addCode(
-            c.call(f1mPrefix+"_copy", x0, x0c),
-            c.call(f1mPrefix+"_sub", x0, x1, r0),
-            c.call(f1mPrefix+"_add", x0c, x1, r1),
-        );
-    }
-*/
 
     function mulNR2(x0, x1, r0, r1, modulus, arena) {
         memcpy_384(r0, x0)
@@ -39,11 +18,6 @@
 
     // r <- x + y
     function f2m_add(x_0, x_1, y_0, y_1, r_0, r_1, modulus, arena) {
-        // r_0 <- x_0 + y_0
-        // r_1 <- x_1 + y_1
-
-        // TODO cover case where r == x or r == y
-
         memcpy_384(r_0, x_0)
         memcpy_384(r_1, x_1)
         addmod384(r_0, y_0, modulus)
@@ -52,9 +26,6 @@
 
     // r <- x - y
     function f2m_sub(x_0, x_1, y_0, y_1, r_0, r_1, modulus, arena) {
-
-        // TODO cover case where r == x or r == y
-
         memcpy_384(r_0, x_0)
         memcpy_384(r_1, x_1)
         submod384(r_0, y_0, modulus)
@@ -67,8 +38,6 @@
         let B := add(mem, 64)
         let C := add(B, 64)
         let D := add(C, 64)
-
-        // TODO cover case where r == x or r == y
 
         // A <- x_0 * y_0
         memcpy_384(A, x_0_offset)
@@ -108,7 +77,7 @@
         memcpy_384(r_1, C)
     }
 
-	// R <- abc * ABC
+	// {r_0, r_1, r_2} <- {a, b, c} * {A, B, C}
 	function f6m_mul(abc, ABC, r, modulus, inv, arena) {
 		let aA_0 := arena
 		let aA_1 := add(aA_0, 64)
@@ -118,8 +87,6 @@
 
 		let cC_0 := add(bB_1, 64)
 		let cC_1 := add(cC_0, 64)
-
-        // ^ TODO, make aA, bB, cC pointers to f2 elements for consistency with the rest of this function
 
         let tmp1 := add(cC_1, 64)
 
@@ -137,14 +104,6 @@
 
         /* 
             r_2 <- ((a + c) * (A + C) - (a * A + c * C)) + bB
-            
-            tmp1 <- a + c
-            r_2  <- A + C
-            r_2 <- r_2 * tmp1
-            
-            tmp1 <- aA * cC
-            r_2 <- r_2 - tmp1
-            r_2 <- r_2 + bB
         */
 
 		// tmp1 <- a + c
@@ -168,7 +127,7 @@
         // return(add(r, 256), 128)
 
         /*
-        r1 = ((a_b * A_B) - aA_bB) + mulNonResidue(cC)
+            r1 = ((a_b * A_B) - aA_bB) + mulNonResidue(cC)
         */
 
         // tmp1 <- a + b
@@ -193,7 +152,7 @@
         f2m_add(add(r, 128), add(r, 192), tmp1, add(tmp1, 64), add(r, 128), add(r, 192), modulus, arena)
 
         /*
-        r0 = aA + mulNonResidue((b + c) * (B + C)) - (b * B + c * C))
+            r0 = aA + mulNonResidue((b + c) * (B + C)) - (b * B + c * C))
         */
 
         // r_0 <- b + c
@@ -208,7 +167,7 @@
         // tmp1 <- bB + cC
         f2m_add(bB_0, bB_1, cC_0, cC_1, tmp1, add(tmp1, 64), modulus, arena)
 
-        // seems to work up until the following statements
+        // r_0 seems to be correctly calculated until the following statements
 
         // r_0 <- r_0 - tmp1
         f2m_sub(r, add(r, 64), tmp1, add(tmp1, 64), r, add(r, 64), modulus, arena)
@@ -234,12 +193,6 @@
             p2 bytecode
 
             ecd347c808af644c7a3a971a556576f434e302b6b490004fb418a4a7da330a6743adeca931169b8b92e91df73ae1e11512a2829e11e843d764d5e3b80e75432d93f69b23ad79c38d43ebbc9bd2b17b9e903033351357b03602624762e5ad360dd7f9857dce663301f393f9fac66f5c49168494e0d20797a6c4f96327ed4fa47dd36d0078d217a712407d35046871d40f2f1b767f6c1ec190eb76a0bce7906ad2e4a7548d03e8aa745e34e1bf49d83ad64c04f57fb4d31039cb4cf01987fda2137b3f8da2f2ae47885890b0d433a3eeed2f9f37cbcfc444e4f1d880390fcdb76518d558857be01b2b10a8010bcdc6d606319c02f6132c8a786377868b5825ada9a5fe303e9ae3b03ce56e90734a17ce970c88b321012cf8dabb58211e3d50f610
-
-            reference trace of first f2m_mul:
-            bignum_f1m_mul: daa35e7a880a2ca3bcea128c5c8d17202945981a13aec134d10c051c1fa23c06b3088c3a380f4b8b1f598e5f390298f * 15e1e13af71de9928b9b1631a9ecad43670a33daa7a418b44f0090b4b602e334f47665551a973a7a4c64af08c847d3ec = 8e7724179630faa8ba6599731e3b7f3592efb881d54c66dd601841435360731e3b9585c3bc798c320b39e434f6b7627
-
-            bignum_f1m_mul: 918e9882e10abce5a0f55c6916e3be87e5dc68b9d3324db632d33c3fb53868f77c0488c7e3ab230d54c6d90277a2d99 * d36ade56247620236b05713353330909e7bb1d29bbceb438dc379ad239bf6932d43750eb8e3d564d743e8119e82a212 = 73e0ae42753b8a53f1680465e9010480e7826a370b33bba6af507f207111e0559fe82f4dd9bb681e70894ec2c1bde0d
-
             */
 
             /*
@@ -299,7 +252,22 @@
 
             f6m_mul(a, A, r_0, bls12_mod, bls12_r_inv, add(bls12_mod, 128)) 
 
-            // assert(r_2_0 == 0x40591ef0c74dbec983b7bef145a87957c1e09049dbc85fbb3e9bb1174892ee83294ef8c4a5954fffbff4ca6aca74c718)
+            // check r_0_0
+
+            // check r_0_1
+            
+            // check r_1_0
+            if eq(eq(mload(r_1), 0xead1838e6c5e168543093c87eaeb576f940670026292dcb7a812600f4fb20a28), false) {
+                revert(0,0)
+            }
+
+            if eq(eq(mload(add(r_1, 32)), 0x1be71ce1ef79f675e4a283b73906ca1700000000000000000000000000000000), false) {
+                revert(0,0)
+            }
+
+            // check r_1_1
+
+            // r_2_0 == 0x40591ef0c74dbec983b7bef145a87957c1e09049dbc85fbb3e9bb1174892ee83294ef8c4a5954fffbff4ca6aca74c718
             if eq(eq(mload(r_2), 0x40591ef0c74dbec983b7bef145a87957c1e09049dbc85fbb3e9bb1174892ee83), false) {
                 revert(0,0)
             }
@@ -308,25 +276,9 @@
                 revert(0,0)
             }
 
-            // r_2_1_0 == 
+            // check r_2_1
 
             // assert(r_2_1 == 0x9b242b8f1c5d63bb525121bd68eda084ab7e6d015052d5adeb79ddb24091d2a8e5b1da00212d0e6c11f01d23790113)
-
-            // assert(r_1_0 == ...)
-            // assert(r_1_1 == ...)
-            
-            // assert(r_0_0 == ...)
-            // assert(r_0_1 == ...)
-
-            /*
-            if eq(eq(mload(r_2), 0x40591ef0c74dbec983b7bef145a87957c1e09049dbc85fbb3e9bb1174892ee83294ef8c4a5954fffbff4ca6aca74c718), false) {
-                revert(0, 0)
-            }
-            */
-
-            //return(r_1, 128)
-
-            // assert correct results
     }
 
     test_f6m_mul()
