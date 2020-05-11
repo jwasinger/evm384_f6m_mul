@@ -5,6 +5,37 @@
         mstore(dst, hi)
         mstore(add(dst, 32), lo)
     }
+/*
+    function build_mulNR2() {
+        const f = module.addFunction(f2mPrefix + "_mulNR");
+        f.addParam("x", "i32");
+        f.addParam("pr", "i32");
+
+        const c = f.getCodeBuilder();
+
+        const x0c = c.i32_const(module.alloc(f1size));
+        const x0 = c.getLocal("x");
+        const x1 = c.i32_add(c.getLocal("x"), c.i32_const(f1size));
+        const r0 = c.getLocal("pr");
+        const r1 = c.i32_add(c.getLocal("pr"), c.i32_const(f1size));
+
+        f.addCode(
+            c.call(f1mPrefix+"_copy", x0, x0c),
+            c.call(f1mPrefix+"_sub", x0, x1, r0),
+            c.call(f1mPrefix+"_add", x0c, x1, r1),
+        );
+    }
+*/
+
+    function mulNR2(x0, x1, r0, r1, modulus, arena) {
+        memcpy_384(r0, x0)
+        memcpy_384(r1, x1)
+
+        // r0 <- x0 - x1
+        submod384(r0, x1, modulus)
+        // r1 <- x0 + x1
+        addmod384(r1, x1, modulus)
+    }
 
     // r <- x + y
     function f2m_add(x_0, x_1, y_0, y_1, r_0, r_1, modulus, arena) {
@@ -163,26 +194,33 @@
         r1 = ((a_b * A_B) - aA_bB) + mulNonResidue(cC)
         */
 
-        // r_1 <- a * b
-        f2m_mul(abc, add(abc, 64), add(abc, 128), add(abc, 192), add(r, 128), add(r, 192), modulus, inv, arena)
+        // tmp1 <- (a + A) * (b + B)
+        /*
+        tmp1 <- a + A
+        r_1 <- b + B
+        r_1 <- r_1 * tmp1
+        */
 
-        // tmp1 <- A * B
-        f2m_mul(ABC, add(ABC, 64), add(ABC, 128), add(ABC, 192), tmp1, add(tmp1, 64), modulus, inv, arena)
+        // tmp1 <- a + b
+        f2m_add(abc, add(abc, 64), add(abc, 128), add(abc, 192), tmp1, add(tmp1, 64), modulus, arena)
+        
+        // r_1 <- A + B
+        f2m_add(ABC, add(ABC, 64), add(ABC, 128), add(ABC, 192), add(r, 128), add(r, 192), modulus, arena)
 
         // r_1 <- r_1 * tmp1
-        f2m_mul(add(r, 128), add(r, 192), tmp1, add(tmp1, 64), tmp1, add(tmp1, 64), modulus, inv, arena)
+        f2m_mul(add(r, 128), add(r, 192), tmp1, add(tmp1, 64), add(r, 128), add(r, 192), modulus, inv, arena)
 
         // tmp1 <- aA * bB
-        f2m_mul(aA_0, aA_1, bB_0, bB_1, tmp1, add(tmp1, 64), modulus, inv, arena)
+        f2m_add(aA_0, aA_1, bB_0, bB_1, tmp1, add(tmp1, 64), modulus, arena)
 
         // r_1 <- r_1 - tmp1
         f2m_sub(add(r, 128), add(r, 192), tmp1, add(tmp1, 64), add(r, 128), add(r, 192), modulus, arena)
 
         // tmp1 <- mulNonResidue(cC)
-        //TODO
+        mulNR2(tmp1, add(tmp1, 64), cC_0, cC_1, modulus, arena)
 
-        // r_1 <- r_1 - tmp1
-        f2m_sub(add(r, 128), add(r, 192), tmp1, add(tmp1, 64), add(r, 128), add(r, 192), modulus, arena)
+        // r_1 <- r_1 + tmp1
+        f2m_add(add(r, 128), add(r, 192), tmp1, add(tmp1, 64), add(r, 128), add(r, 192), modulus, arena)
 
         /*
         r0 = aA + mulNonResidue((b_c + B_C) - bBcC)
