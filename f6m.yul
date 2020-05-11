@@ -121,32 +121,10 @@
 
         // ^ TODO, make aA, bB, cC pointers to f2 elements for consistency with the rest of this function
 
-
-
         let tmp1 := add(cC_1, 64)
 
 		arena := add(tmp1, 128)
 		// all memory after 'arena' should be unused
-
-        /*
-        abc:
-        a_0 => abc
-        a_1 => add(abc, 64)
-
-        b_0 => add(abc, 128)
-        b_1 => add(abc, 192)
-
-        c_0 => add(abc, 256)
-        c_1 => add(abc, 320)
-
-        r_0_0  => r
-        r_0_1 => add(r, 64)
-        r_1_0 => add(r, 128)
-        r_1_1 => add(r, 192)
-        r_2_0 => add(r, 256)
-        r_2_1 => add(r, 320)
-
-        */
 
 		// aA <- a * A
     	f2m_mul(abc, add(abc, 64), ABC, add(ABC, 64), aA_0, aA_1, modulus, inv, arena)
@@ -194,13 +172,6 @@
         r1 = ((a_b * A_B) - aA_bB) + mulNonResidue(cC)
         */
 
-        // tmp1 <- (a + A) * (b + B)
-        /*
-        tmp1 <- a + A
-        r_1 <- b + B
-        r_1 <- r_1 * tmp1
-        */
-
         // tmp1 <- a + b
         f2m_add(abc, add(abc, 64), add(abc, 128), add(abc, 192), tmp1, add(tmp1, 64), modulus, arena)
         
@@ -223,25 +194,31 @@
         f2m_add(add(r, 128), add(r, 192), tmp1, add(tmp1, 64), add(r, 128), add(r, 192), modulus, arena)
 
         /*
-        r0 = aA + mulNonResidue((b_c + B_C) - bBcC)
+        r0 = aA + mulNonResidue((b + c) * (B + C)) - (b * B + c * C))
         */
 
-        // r_0 <- b * c
-        f2m_mul(add(abc, 128), add(abc, 192), add(abc, 256), add(abc, 320), r, add(r, 64), modulus, inv, arena)
-        // tmp1 <- B * C
-        f2m_mul(add(ABC, 128), add(ABC, 192), add(ABC, 256), add(ABC, 320), tmp1, add(tmp1, 64),  modulus, inv, arena)
+        // r_0 <- b + c
+        f2m_add(add(abc, 128), add(abc, 192), add(abc, 256), add(abc, 320), r, add(r, 64), modulus, arena)
 
-        // r_0 <- r_0 + tmp1
-        f2m_add(r, add(r, 64), tmp1, add(tmp1, 64), r, add(r, 64), modulus, arena)
+        // tmp1 <- B + C
+        f2m_add(add(ABC, 128), add(ABC, 192), add(ABC, 256), add(ABC, 320), tmp1, add(tmp1, 64),  modulus, arena)
 
-        // tmp1 <- bB * cC
-        f2m_mul(bB_0, bB_1, cC_0, cC_1, tmp1, add(tmp1, 64), modulus, inv, arena)
+        // r_0 <- r_0 * tmp1
+        f2m_mul(r, add(r, 64), tmp1, add(tmp1, 64), r, add(r, 64), modulus, inv, arena)
+
+        // tmp1 <- bB + cC
+        f2m_add(bB_0, bB_1, cC_0, cC_1, tmp1, add(tmp1, 64), modulus, arena)
+
+        // seems to work up until the following statements
 
         // r_0 <- r_0 - tmp1
         f2m_sub(r, add(r, 64), tmp1, add(tmp1, 64), r, add(r, 64), modulus, arena)
 
+        // return(r, 128)
+        // ^ this line causes "stack too deep" error
+
         // r_0 <- mulNonResidue(r_0)
-        // TODO
+        mulNR2(r, add(r, 64), r, add(r, 64), modulus, arena)
 
         // r_0 <- aA + r_0
         f2m_add(r, add(r, 64), aA_0, aA_1, r, add(r, 64), modulus, arena)
@@ -311,9 +288,6 @@
             mstore(add(C, 64), 0x319c02f6132c8a786377868b5825ada9a5fe303e9ae3b03ce56e90734a17ce97)
             mstore(add(C, 96), 0x0c88b321012cf8dabb58211e3d50f61000000000000000000000000000000000)
 
-            // C_0
-            // C_1
-
             let r_0 := add(C, 128)
             let r_1 := add(r_0, 128)
             let r_2 := add(r_1, 128)
@@ -325,6 +299,8 @@
             let bls12_r_inv :=         0x89f3fffcfffcfffd
 
             f6m_mul(a, A, r_0, bls12_mod, bls12_r_inv, add(bls12_mod, 128)) 
+
+            // assert correct results
     }
 
     test_f6m_mul()
