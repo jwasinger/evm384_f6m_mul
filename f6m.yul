@@ -253,9 +253,17 @@
             f6m_mul(a, A, r_0, bls12_mod, bls12_r_inv, add(bls12_mod, 128)) 
 
             // check r_0_0
+            if eq(eq(mload(r_0), 0xf4f3f4e0a35068eaac665aee2e71f682aecd20923b420023b6d5420ba01ea982), false) {
+                revert(0,0)
+            }
+
+            if eq(eq(mload(add(r_0, 32)), 0x87c314107a998a650ab3247ef39c920e00000000000000000000000000000000), false) {
+                revert(0,0)
+            }
 
             // check r_0_1
-            
+            // currently incorrect
+
             // check r_1_0
             if eq(eq(mload(r_1), 0xead1838e6c5e168543093c87eaeb576f940670026292dcb7a812600f4fb20a28), false) {
                 revert(0,0)
@@ -266,6 +274,7 @@
             }
 
             // check r_1_1
+            // currently incorrect
 
             // r_2_0 == 0x40591ef0c74dbec983b7bef145a87957c1e09049dbc85fbb3e9bb1174892ee83294ef8c4a5954fffbff4ca6aca74c718
             if eq(eq(mload(r_2), 0x40591ef0c74dbec983b7bef145a87957c1e09049dbc85fbb3e9bb1174892ee83), false) {
@@ -277,8 +286,13 @@
             }
 
             // check r_2_1
+            if eq(eq(mload(add(r_2, 64)), 0x9b242b8f1c5d63bb525121bd68eda084ab7e6d015052d5adeb79ddb24091d2a8), false) {
+                revert(0,0)
+            }
 
-            // assert(r_2_1 == 0x9b242b8f1c5d63bb525121bd68eda084ab7e6d015052d5adeb79ddb24091d2a8e5b1da00212d0e6c11f01d23790113)
+            if eq(eq(mload(add(r_2, 96)), 0xe5b1da00212d0e6c11f01d237901130800000000000000000000000000000000), false) {
+                revert(0,0)
+            }
     }
 
     test_f6m_mul()
