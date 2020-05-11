@@ -156,17 +156,16 @@
         // r_2 <- r_2 * tmp1
         f2m_mul(add(r, 256), add(r, 320), tmp1, add(tmp1, 64), add(r, 256), add(r, 320), modulus, inv, arena)
 
-        // results consistent up until here
-
         // tmp1 <- aA + cC
         f2m_add(aA_0, aA_1, cC_0, cC_1, tmp1, add(tmp1, 64), modulus, arena)
-
 
         // r_2 <- r_2 - tmp1
         f2m_sub(add(r, 256), add(r, 320), tmp1, add(tmp1, 64), add(r, 256), add(r, 320), modulus, arena)
 
         // r_2 <- r_2 + bB
         f2m_add(add(r, 256), add(r, 320), bB_0, bB_1, add(r, 256), add(r, 320), modulus, arena)
+
+        // return(add(r, 256), 128)
 
         /*
         r1 = ((a_b * A_B) - aA_bB) + mulNonResidue(cC)
@@ -188,7 +187,7 @@
         f2m_sub(add(r, 128), add(r, 192), tmp1, add(tmp1, 64), add(r, 128), add(r, 192), modulus, arena)
 
         // tmp1 <- mulNonResidue(cC)
-        mulNR2(tmp1, add(tmp1, 64), cC_0, cC_1, modulus, arena)
+        mulNR2(cC_0, cC_1, tmp1, add(tmp1, 64), modulus, arena)
 
         // r_1 <- r_1 + tmp1
         f2m_add(add(r, 128), add(r, 192), tmp1, add(tmp1, 64), add(r, 128), add(r, 192), modulus, arena)
@@ -299,6 +298,33 @@
             let bls12_r_inv :=         0x89f3fffcfffcfffd
 
             f6m_mul(a, A, r_0, bls12_mod, bls12_r_inv, add(bls12_mod, 128)) 
+
+            // assert(r_2_0 == 0x40591ef0c74dbec983b7bef145a87957c1e09049dbc85fbb3e9bb1174892ee83294ef8c4a5954fffbff4ca6aca74c718)
+            if eq(eq(mload(r_2), 0x40591ef0c74dbec983b7bef145a87957c1e09049dbc85fbb3e9bb1174892ee83), false) {
+                revert(0,0)
+            }
+
+            if eq(eq(mload(add(r_2, 32)), 0x294ef8c4a5954fffbff4ca6aca74c71800000000000000000000000000000000), false) {
+                revert(0,0)
+            }
+
+            // r_2_1_0 == 
+
+            // assert(r_2_1 == 0x9b242b8f1c5d63bb525121bd68eda084ab7e6d015052d5adeb79ddb24091d2a8e5b1da00212d0e6c11f01d23790113)
+
+            // assert(r_1_0 == ...)
+            // assert(r_1_1 == ...)
+            
+            // assert(r_0_0 == ...)
+            // assert(r_0_1 == ...)
+
+            /*
+            if eq(eq(mload(r_2), 0x40591ef0c74dbec983b7bef145a87957c1e09049dbc85fbb3e9bb1174892ee83294ef8c4a5954fffbff4ca6aca74c718), false) {
+                revert(0, 0)
+            }
+            */
+
+            //return(r_1, 128)
 
             // assert correct results
     }
