@@ -77,24 +77,24 @@
         memcpy_384(r_1, C)
     }
 
-	// {r_0, r_1, r_2} <- {a, b, c} * {A, B, C}
-	function f6m_mul(abc, ABC, r, modulus, inv, arena) {
-		let aA_0 := arena
-		let aA_1 := add(aA_0, 64)
+    // {r_0, r_1, r_2} <- {a, b, c} * {A, B, C}
+    function f6m_mul(abc, ABC, r, modulus, inv, arena) {
+        let aA_0 := arena
+        let aA_1 := add(aA_0, 64)
 
-		let bB_0 := add(aA_1, 64)
-		let bB_1 := add(bB_0, 64)
+        let bB_0 := add(aA_1, 64)
+        let bB_1 := add(bB_0, 64)
 
-		let cC_0 := add(bB_1, 64)
-		let cC_1 := add(cC_0, 64)
+        let cC_0 := add(bB_1, 64)
+        let cC_1 := add(cC_0, 64)
 
         let tmp1 := add(cC_1, 64)
 
-		arena := add(tmp1, 128)
-		// all memory after 'arena' should be unused
+        arena := add(tmp1, 128)
+        // all memory after 'arena' should be unused
 
-		// aA <- a * A
-    	f2m_mul(abc, add(abc, 64), ABC, add(ABC, 64), aA_0, aA_1, modulus, inv, arena)
+        // aA <- a * A
+        f2m_mul(abc, add(abc, 64), ABC, add(ABC, 64), aA_0, aA_1, modulus, inv, arena)
 
         // bB <- b * B
         f2m_mul(add(abc, 128), add(abc, 192), add(ABC, 128), add(ABC, 192), bB_0, bB_1, modulus, inv, arena)
@@ -106,7 +106,7 @@
             r_2 <- ((a + c) * (A + C) - (a * A + c * C)) + bB
         */
 
-		// tmp1 <- a + c
+        // tmp1 <- a + c
         f2m_add(abc, add(abc, 64), add(abc, 256), add(abc, 320), tmp1, add(tmp1, 64), modulus, arena)
 
         // r_2 <- A + C
@@ -180,7 +180,7 @@
 
         // r_0 <- aA + r_0
         f2m_add(r, add(r, 64), aA_0, aA_1, r, add(r, 64), modulus, arena)
-	}
+    }
 
     function test_f6m_mul() {
             let a := msize()
