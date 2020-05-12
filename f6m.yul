@@ -1,4 +1,11 @@
 {
+
+    //let bls12_mod := msize()
+    //mstore(bls12_mod,          0xabaafffffffffeb9ffff53b1feffab1e24f6b0f6a0d23067bf1285f3844b7764)
+    //mstore(add(bls12_mod, 32), 0xd7ac4b43b6a71b4b9ae67f39ea11011a00000000000000000000000000000000)
+
+    // bls12_mod is at mem position 0
+
     function memcpy_384(dst, src) {
         let hi := mload(src)
         let lo := mload(add(src, 32))
@@ -6,36 +13,36 @@
         mstore(add(dst, 32), lo)
     }
 
-    function mulNR2(x0, x1, r0, r1, modulus, arena) {
+    function mulNR2(x0, x1, r0, r1, arena) {
         let x0c := arena
         memcpy_384(x0c, x0) // copy x0 to x0c
         memcpy_384(r0, x0)
         memcpy_384(r1, x1)
 
         // r0 <- x0 - x1
-        submod384(r0, x1, modulus)
+        submod384(r0, x1, 0)
         // r1 <- x0 + x1
-        addmod384(r1, x0c, modulus)
+        addmod384(r1, x0c, 0)
     }
 
     // r <- x + y
-    function f2m_add(x_0, x_1, y_0, y_1, r_0, r_1, modulus) {
+    function f2m_add(x_0, x_1, y_0, y_1, r_0, r_1) {
         memcpy_384(r_0, x_0)
         memcpy_384(r_1, x_1)
-        addmod384(r_0, y_0, modulus)
-        addmod384(r_1, y_1, modulus)
+        addmod384(r_0, y_0, 0)
+        addmod384(r_1, y_1, 0)
     }
 
     // r <- x - y
-    function f2m_sub(x_0, x_1, y_0, y_1, r_0, r_1, modulus) {
+    function f2m_sub(x_0, x_1, y_0, y_1, r_0, r_1) {
         memcpy_384(r_0, x_0)
         memcpy_384(r_1, x_1)
-        submod384(r_0, y_0, modulus)
-        submod384(r_1, y_1, modulus)
+        submod384(r_0, y_0, 0)
+        submod384(r_1, y_1, 0)
     }
 
     // r <- x * y
-    function f2m_mul(x_0_offset, x_1_offset, y_0_offset, y_1_offset, r_0, r_1, modulus, inv, mem) {
+    function f2m_mul(x_0_offset, x_1_offset, y_0_offset, y_1_offset, r_0, r_1, inv, mem) {
         let A := mem
         let B := add(mem, 64)
         let C := add(B, 64)
@@ -43,44 +50,44 @@
 
         // A <- x_0 * y_0
         memcpy_384(A, x_0_offset)
-        mulmodmont384(A, y_0_offset, modulus, inv)
+        mulmodmont384(A, y_0_offset, 0, inv)
 
         // B <- x_1 * y_1
         memcpy_384(B, x_1_offset)
-        mulmodmont384(B, y_1_offset, modulus, inv)
+        mulmodmont384(B, y_1_offset, 0, inv)
 
         // C <- x_0 + x_1
         memcpy_384(C, x_0_offset)
-        addmod384(C, x_1_offset, modulus)
+        addmod384(C, x_1_offset, 0)
 
         // D <- y_0 + y_1
         memcpy_384(D, y_0_offset)
-        addmod384(D, y_1_offset, modulus)
+        addmod384(D, y_1_offset, 0)
 
         // C <- D * C
-        mulmodmont384(C, D, modulus, inv)
+        mulmodmont384(C, D, 0, inv)
 
         // f1m_mulNonresidue = f1m_neg(val) = 0 - val 
         // r_0 <- 0 - B
         mstore(r_0,          0x0000000000000000000000000000000000000000000000000000000000000000)
         mstore(add(r_0, 32), 0x0000000000000000000000000000000000000000000000000000000000000000)
-        submod384(r_0, B, modulus)
+        submod384(r_0, B, 0)
 
         // r_0 <- r_0 + A
-        addmod384(r_0, A, modulus)
+        addmod384(r_0, A, 0)
 
         // B <- A + B
-        addmod384(B, A, modulus)
+        addmod384(B, A, 0)
 
         // C <- C - B 
-        submod384(C, B, modulus)
+        submod384(C, B, 0)
 
         // r_1 <- C
         memcpy_384(r_1, C)
     }
 
     // {r_0, r_1, r_2} <- {a, b, c} * {A, B, C}
-    function f6m_mul(abc, ABC, r, modulus, inv, arena) {
+    function f6m_mul(abc, ABC, r, inv, arena) {
         let aA_0 := arena
         let aA_1 := add(aA_0, 64)
 
@@ -96,35 +103,35 @@
         // all memory after 'arena' should be unused
 
         // aA <- a * A
-        f2m_mul(abc, add(abc, 64), ABC, add(ABC, 64), aA_0, aA_1, modulus, inv, arena)
+        f2m_mul(abc, add(abc, 64), ABC, add(ABC, 64), aA_0, aA_1, inv, arena)
 
         // bB <- b * B
-        f2m_mul(add(abc, 128), add(abc, 192), add(ABC, 128), add(ABC, 192), bB_0, bB_1, modulus, inv, arena)
+        f2m_mul(add(abc, 128), add(abc, 192), add(ABC, 128), add(ABC, 192), bB_0, bB_1, inv, arena)
 
         // cC <- c * C
-        f2m_mul(add(abc, 256), add(abc, 320), add(ABC, 256), add(ABC, 320), cC_0, cC_1, modulus, inv, arena)
+        f2m_mul(add(abc, 256), add(abc, 320), add(ABC, 256), add(ABC, 320), cC_0, cC_1, inv, arena)
 
         /* 
             r_2 <- ((a + c) * (A + C) - (a * A + c * C)) + bB
         */
 
         // tmp1 [a_c] <- a + c
-        f2m_add(abc, add(abc, 64), add(abc, 256), add(abc, 320), tmp1, add(tmp1, 64), modulus)
+        f2m_add(abc, add(abc, 64), add(abc, 256), add(abc, 320), tmp1, add(tmp1, 64))
 
         // r_2 [A_C] <- A + C
-        f2m_add(ABC, add(ABC, 64), add(ABC, 256), add(ABC, 320), add(r, 256), add(r, 320), modulus)
+        f2m_add(ABC, add(ABC, 64), add(ABC, 256), add(ABC, 320), add(r, 256), add(r, 320))
         
         // r_2 <- r_2 * tmp1 [a_c]
-        f2m_mul(add(r, 256), add(r, 320), tmp1, add(tmp1, 64), add(r, 256), add(r, 320), modulus, inv, arena)
+        f2m_mul(add(r, 256), add(r, 320), tmp1, add(tmp1, 64), add(r, 256), add(r, 320), inv, arena)
 
         // tmp1 [aA_cC] <- aA + cC
-        f2m_add(aA_0, aA_1, cC_0, cC_1, tmp1, add(tmp1, 64), modulus)
+        f2m_add(aA_0, aA_1, cC_0, cC_1, tmp1, add(tmp1, 64))
 
         // r_2 <- r_2 - tmp1 [aA_cC]
-        f2m_sub(add(r, 256), add(r, 320), tmp1, add(tmp1, 64), add(r, 256), add(r, 320), modulus)
+        f2m_sub(add(r, 256), add(r, 320), tmp1, add(tmp1, 64), add(r, 256), add(r, 320))
 
         // r_2 <- r_2 + bB
-        f2m_add(add(r, 256), add(r, 320), bB_0, bB_1, add(r, 256), add(r, 320), modulus)
+        f2m_add(add(r, 256), add(r, 320), bB_0, bB_1, add(r, 256), add(r, 320))
 
         // return(add(r, 256), 128)
 
@@ -133,59 +140,64 @@
         */
 
         // tmp1 [a_b] <- a + b
-        f2m_add(abc, add(abc, 64), add(abc, 128), add(abc, 192), tmp1, add(tmp1, 64), modulus)
+        f2m_add(abc, add(abc, 64), add(abc, 128), add(abc, 192), tmp1, add(tmp1, 64))
         
         // r_1 [A_B] <- A + B
-        f2m_add(ABC, add(ABC, 64), add(ABC, 128), add(ABC, 192), add(r, 128), add(r, 192), modulus)
+        f2m_add(ABC, add(ABC, 64), add(ABC, 128), add(ABC, 192), add(r, 128), add(r, 192))
 
         // r_1 <- r_1 [A_B] * tmp1 [a_b]
-        f2m_mul(add(r, 128), add(r, 192), tmp1, add(tmp1, 64), add(r, 128), add(r, 192), modulus, inv, arena)
+        f2m_mul(add(r, 128), add(r, 192), tmp1, add(tmp1, 64), add(r, 128), add(r, 192), inv, arena)
 
         // tmp1 [aA_bB] <- aA * bB
-        f2m_add(aA_0, aA_1, bB_0, bB_1, tmp1, add(tmp1, 64), modulus)
+        f2m_add(aA_0, aA_1, bB_0, bB_1, tmp1, add(tmp1, 64))
 
         // r_1 <- r_1 - tmp1 [aA_bB]
-        f2m_sub(add(r, 128), add(r, 192), tmp1, add(tmp1, 64), add(r, 128), add(r, 192), modulus)
+        f2m_sub(add(r, 128), add(r, 192), tmp1, add(tmp1, 64), add(r, 128), add(r, 192))
 
         // tmp1 [AUX] <- mulNonResidue(cC)
-        mulNR2(cC_0, cC_1, tmp1, add(tmp1, 64), modulus, arena)
+        mulNR2(cC_0, cC_1, tmp1, add(tmp1, 64), arena)
 
         // r_1 <- r_1 + tmp1 [AUX]
-        f2m_add(add(r, 128), add(r, 192), tmp1, add(tmp1, 64), add(r, 128), add(r, 192), modulus)
+        f2m_add(add(r, 128), add(r, 192), tmp1, add(tmp1, 64), add(r, 128), add(r, 192))
 
         /*
             r0 = aA + mulNonResidue((b + c) * (B + C)) - (b * B + c * C))
         */
 
         // r_0 [b_c] <- b + c
-        f2m_add(add(abc, 128), add(abc, 192), add(abc, 256), add(abc, 320), r, add(r, 64), modulus)
+        f2m_add(add(abc, 128), add(abc, 192), add(abc, 256), add(abc, 320), r, add(r, 64))
 
         // tmp1 [B_C] <- B + C
-        f2m_add(add(ABC, 128), add(ABC, 192), add(ABC, 256), add(ABC, 320), tmp1, add(tmp1, 64),  modulus)
+        f2m_add(add(ABC, 128), add(ABC, 192), add(ABC, 256), add(ABC, 320), tmp1, add(tmp1, 64))
 
         // r_0 <- r_0 [b_c] * tmp1 [B_C]
-        f2m_mul(r, add(r, 64), tmp1, add(tmp1, 64), r, add(r, 64), modulus, inv, arena)
+        f2m_mul(r, add(r, 64), tmp1, add(tmp1, 64), r, add(r, 64), inv, arena)
 
         // tmp1 [bB_cC] <- bB + cC
-        f2m_add(bB_0, bB_1, cC_0, cC_1, tmp1, add(tmp1, 64), modulus)
+        f2m_add(bB_0, bB_1, cC_0, cC_1, tmp1, add(tmp1, 64))
 
         // r_0 seems to be correctly calculated until the following statements
 
         // r_0 <- r_0 - tmp1 [bB_cC]
-        f2m_sub(r, add(r, 64), tmp1, add(tmp1, 64), r, add(r, 64), modulus)
+        f2m_sub(r, add(r, 64), tmp1, add(tmp1, 64), r, add(r, 64))
 
         // return(r, 128)
         // ^ this line causes "stack too deep" error
 
         // r_0 <- mulNonResidue(r_0)
-        mulNR2(r, add(r, 64), r, add(r, 64), modulus, arena)
+        mulNR2(r, add(r, 64), r, add(r, 64), arena)
 
         // r_0 <- aA + r_0
-        f2m_add(r, add(r, 64), aA_0, aA_1, r, add(r, 64), modulus)
+        f2m_add(r, add(r, 64), aA_0, aA_1, r, add(r, 64))
     }
 
     function test_f6m_mul() {
-            let point1_a := msize()
+            let bls12_mod := msize()
+            mstore(bls12_mod,          0xabaafffffffffeb9ffff53b1feffab1e24f6b0f6a0d23067bf1285f3844b7764)
+            mstore(add(bls12_mod, 32), 0xd7ac4b43b6a71b4b9ae67f39ea11011a00000000000000000000000000000000)
+
+            //let point1_a := msize()
+            let point1_a := add(bls12_mod, 64)
 
             /*
             p1 bytecode
@@ -262,9 +274,6 @@
             mstore(add(point2_C, 64), 0x319c02f6132c8a786377868b5825ada9a5fe303e9ae3b03ce56e90734a17ce97)
             mstore(add(point2_C, 96), 0x0c88b321012cf8dabb58211e3d50f61000000000000000000000000000000000)
 
-            let bls12_mod := add(point2_C, 128)
-            mstore(bls12_mod,          0xabaafffffffffeb9ffff53b1feffab1e24f6b0f6a0d23067bf1285f3844b7764)
-            mstore(add(bls12_mod, 32), 0xd7ac4b43b6a71b4b9ae67f39ea11011a00000000000000000000000000000000)
 
             let bls12_r_inv :=         0x89f3fffcfffcfffd
 
@@ -280,22 +289,22 @@
             // just test one call
             //f6m_mul(point1_a, point2_A, f6m_result1, bls12_mod, bls12_r_inv, f6m_scratch_spaace)
 
-            f6m_mul(point1_a, point2_A, f6m_result4, bls12_mod, bls12_r_inv, f6m_scratch_spaace)
-            f6m_mul(point1_a, f6m_result4, f6m_result5, bls12_mod, bls12_r_inv, f6m_scratch_spaace)
+            f6m_mul(point1_a, point2_A, f6m_result4, bls12_r_inv, f6m_scratch_spaace)
+            f6m_mul(point1_a, f6m_result4, f6m_result5, bls12_r_inv, f6m_scratch_spaace)
 
             let i := 0
             for {} lt(i, 135) {i := add(i, 1)} {
-                f6m_mul(f6m_result4, f6m_result5, f6m_result1, bls12_mod, bls12_r_inv, f6m_scratch_spaace)
-                f6m_mul(f6m_result5, f6m_result1, f6m_result2, bls12_mod, bls12_r_inv, f6m_scratch_spaace)
-                f6m_mul(f6m_result1, f6m_result2, f6m_result3, bls12_mod, bls12_r_inv, f6m_scratch_spaace)
-                f6m_mul(f6m_result2, f6m_result3, f6m_result4, bls12_mod, bls12_r_inv, f6m_scratch_spaace)
-                f6m_mul(f6m_result3, f6m_result4, f6m_result5, bls12_mod, bls12_r_inv, f6m_scratch_spaace)
+                f6m_mul(f6m_result4, f6m_result5, f6m_result1, bls12_r_inv, f6m_scratch_spaace)
+                f6m_mul(f6m_result5, f6m_result1, f6m_result2, bls12_r_inv, f6m_scratch_spaace)
+                f6m_mul(f6m_result1, f6m_result2, f6m_result3, bls12_r_inv, f6m_scratch_spaace)
+                f6m_mul(f6m_result2, f6m_result3, f6m_result4, bls12_r_inv, f6m_scratch_spaace)
+                f6m_mul(f6m_result3, f6m_result4, f6m_result5, bls12_r_inv, f6m_scratch_spaace)
 
-                f6m_mul(f6m_result4, f6m_result5, f6m_result1, bls12_mod, bls12_r_inv, f6m_scratch_spaace)
-                f6m_mul(f6m_result5, f6m_result1, f6m_result2, bls12_mod, bls12_r_inv, f6m_scratch_spaace)
-                f6m_mul(f6m_result1, f6m_result2, f6m_result3, bls12_mod, bls12_r_inv, f6m_scratch_spaace)
-                f6m_mul(f6m_result2, f6m_result3, f6m_result4, bls12_mod, bls12_r_inv, f6m_scratch_spaace)
-                f6m_mul(f6m_result3, f6m_result4, f6m_result5, bls12_mod, bls12_r_inv, f6m_scratch_spaace)
+                f6m_mul(f6m_result4, f6m_result5, f6m_result1, bls12_r_inv, f6m_scratch_spaace)
+                f6m_mul(f6m_result5, f6m_result1, f6m_result2, bls12_r_inv, f6m_scratch_spaace)
+                f6m_mul(f6m_result1, f6m_result2, f6m_result3, bls12_r_inv, f6m_scratch_spaace)
+                f6m_mul(f6m_result2, f6m_result3, f6m_result4, bls12_r_inv, f6m_scratch_spaace)
+                f6m_mul(f6m_result3, f6m_result4, f6m_result5, bls12_r_inv, f6m_scratch_spaace)
             }
 
             return(f6m_result5, 64)
