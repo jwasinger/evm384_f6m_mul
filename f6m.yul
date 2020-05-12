@@ -185,7 +185,7 @@
     }
 
     function test_f6m_mul() {
-            let a := msize()
+            let point1_a := msize()
 
             /*
             p1 bytecode
@@ -227,63 +227,112 @@
 
 
 
-            mstore(a,          0x8f2990f3e598f5b1b8f480a3c388306bc023fac151c0104d13ec3aa181599402)
-            mstore(add(a, 32), 0x72d1c8c528a1ce3bcaa280a8e735aa0d00000000000000000000000000000000)
-            mstore(add(a, 64), 0x992d7a27906d4cd530b23a7e8c48c0778f8653fbc3332d63db24339d8bc65d7e)
-            mstore(add(a, 96), 0xe83b6e91c6550f5aceab102e88e9180900000000000000000000000000000000)
+            mstore(point1_a,          0x8f2990f3e598f5b1b8f480a3c388306bc023fac151c0104d13ec3aa181599402)
+            mstore(add(point1_a, 32), 0x72d1c8c528a1ce3bcaa280a8e735aa0d00000000000000000000000000000000)
+            mstore(add(point1_a, 64), 0x992d7a27906d4cd530b23a7e8c48c0778f8653fbc3332d63db24339d8bc65d7e)
+            mstore(add(point1_a, 96), 0xe83b6e91c6550f5aceab102e88e9180900000000000000000000000000000000)
 
-            let b := add(a, 128)
-            mstore(b,          0x7299907146816f08c4c6a394e91374ed6ff3618a57358cfb124ee6ab4c560e5c)
-            mstore(add(b, 32), 0xac40700b41e2ee8674680728f0c5a61800000000000000000000000000000000)
-            mstore(add(b, 64), 0x0fd77f62b39eb952a0f8d21cec1f93b1d62dd7923aa86882ddf7dd4d3532b0b7)
-            mstore(add(b, 96), 0xede8f3fc89fa4a79574067e2d9a9d20000000000000000000000000000000000)
+            let point1_b := add(point1_a, 128)
+            mstore(point1_b,          0x7299907146816f08c4c6a394e91374ed6ff3618a57358cfb124ee6ab4c560e5c)
+            mstore(add(point1_b, 32), 0xac40700b41e2ee8674680728f0c5a61800000000000000000000000000000000)
+            mstore(add(point1_b, 64), 0x0fd77f62b39eb952a0f8d21cec1f93b1d62dd7923aa86882ddf7dd4d3532b0b7)
+            mstore(add(point1_b, 96), 0xede8f3fc89fa4a79574067e2d9a9d20000000000000000000000000000000000)
 
-            let c := add(b, 128)
-            mstore(c,          0x7a69de46b13d8cb4c4833224aaf9ef7ea6a48975ab35c6e123b8539ab84c381a)
-            mstore(add(c, 32), 0x2533401a73c4e79f47d714899d01ac1300000000000000000000000000000000)
-            mstore(add(c, 64), 0xa9fa0b0d8156c36a1a9ddacb73ef278f4d149b560e88789f2bfeb9f708b6cc2f)
-            mstore(add(c, 96), 0x988927bfe0186d5bf9cb40cb07f21b1800000000000000000000000000000000)
+            let point1_c := add(point1_b, 128)
+            mstore(point1_c,          0x7a69de46b13d8cb4c4833224aaf9ef7ea6a48975ab35c6e123b8539ab84c381a)
+            mstore(add(point1_c, 32), 0x2533401a73c4e79f47d714899d01ac1300000000000000000000000000000000)
+            mstore(add(point1_c, 64), 0xa9fa0b0d8156c36a1a9ddacb73ef278f4d149b560e88789f2bfeb9f708b6cc2f)
+            mstore(add(point1_c, 96), 0x988927bfe0186d5bf9cb40cb07f21b1800000000000000000000000000000000)
 
-            let A := add(c, 128)
-            mstore(A,          0xecd347c808af644c7a3a971a556576f434e302b6b490004fb418a4a7da330a67)
-            mstore(add(A, 32), 0x43adeca931169b8b92e91df73ae1e11500000000000000000000000000000000)
-            mstore(add(A, 64), 0x12a2829e11e843d764d5e3b80e75432d93f69b23ad79c38d43ebbc9bd2b17b9e)
-            mstore(add(A, 96), 0x903033351357b03602624762e5ad360d00000000000000000000000000000000)
+            let point2_A := add(point1_c, 128)
+            mstore(point2_A,          0xecd347c808af644c7a3a971a556576f434e302b6b490004fb418a4a7da330a67)
+            mstore(add(point2_A, 32), 0x43adeca931169b8b92e91df73ae1e11500000000000000000000000000000000)
+            mstore(add(point2_A, 64), 0x12a2829e11e843d764d5e3b80e75432d93f69b23ad79c38d43ebbc9bd2b17b9e)
+            mstore(add(point2_A, 96), 0x903033351357b03602624762e5ad360d00000000000000000000000000000000)
 
-            let B := add(A, 128)
-            mstore(B,          0xd7f9857dce663301f393f9fac66f5c49168494e0d20797a6c4f96327ed4fa47d)
-            mstore(add(B, 32), 0xd36d0078d217a712407d35046871d40f00000000000000000000000000000000)
-            mstore(add(B, 64), 0x2f1b767f6c1ec190eb76a0bce7906ad2e4a7548d03e8aa745e34e1bf49d83ad6)
-            mstore(add(B, 96), 0x4c04f57fb4d31039cb4cf01987fda21300000000000000000000000000000000)
+            let point2_B := add(point2_A, 128)
+            mstore(point2_B,          0xd7f9857dce663301f393f9fac66f5c49168494e0d20797a6c4f96327ed4fa47d)
+            mstore(add(point2_B, 32), 0xd36d0078d217a712407d35046871d40f00000000000000000000000000000000)
+            mstore(add(point2_B, 64), 0x2f1b767f6c1ec190eb76a0bce7906ad2e4a7548d03e8aa745e34e1bf49d83ad6)
+            mstore(add(point2_B, 96), 0x4c04f57fb4d31039cb4cf01987fda21300000000000000000000000000000000)
 
-            let C := add(B, 128)
-            mstore(C,          0x7b3f8da2f2ae47885890b0d433a3eeed2f9f37cbcfc444e4f1d880390fcdb765)
-            mstore(add(C, 32), 0x18d558857be01b2b10a8010bcdc6d60600000000000000000000000000000000)
-            mstore(add(C, 64), 0x319c02f6132c8a786377868b5825ada9a5fe303e9ae3b03ce56e90734a17ce97)
-            mstore(add(C, 96), 0x0c88b321012cf8dabb58211e3d50f61000000000000000000000000000000000)
+            let point2_C := add(point2_B, 128)
+            mstore(point2_C,          0x7b3f8da2f2ae47885890b0d433a3eeed2f9f37cbcfc444e4f1d880390fcdb765)
+            mstore(add(point2_C, 32), 0x18d558857be01b2b10a8010bcdc6d60600000000000000000000000000000000)
+            mstore(add(point2_C, 64), 0x319c02f6132c8a786377868b5825ada9a5fe303e9ae3b03ce56e90734a17ce97)
+            mstore(add(point2_C, 96), 0x0c88b321012cf8dabb58211e3d50f61000000000000000000000000000000000)
 
-            //let r_0 := add(C, 128)
-            let f6m_result := add(C, 128) // use a longer variable name ffs
-            //let r_1 := add(r_0, 128)
-            let f6m_result_r1 := add(f6m_result, 128) // to allocate more memory?
-            //let r_2 := add(r_1, 128)
-            let f6m_result_r2 := add(f6m_result_r1, 128) // to allocate more memory?
-
-            let bls12_mod := add(f6m_result_r2, 128)
+            let bls12_mod := add(point2_C, 128)
             mstore(bls12_mod,          0xabaafffffffffeb9ffff53b1feffab1e24f6b0f6a0d23067bf1285f3844b7764)
             mstore(add(bls12_mod, 32), 0xd7ac4b43b6a71b4b9ae67f39ea11011a00000000000000000000000000000000)
 
             let bls12_r_inv :=         0x89f3fffcfffcfffd
 
 
-            // just test one call
-            f6m_mul(a, A, f6m_result, bls12_mod, bls12_r_inv, add(bls12_mod, 128)) 
+            let f6m_result1 := add(bls12_mod, 384) // allocate memory past bls12_mod
+            let f6m_result2 := add(f6m_result1, 384)
+            let f6m_result3 := add(f6m_result2, 384)
+            let f6m_result4 := add(f6m_result3, 384)
+            let f6m_result5 := add(f6m_result4, 384)
 
-            //let i := 0
-            //for {} lt(i, 135) {i := add(i, 1)} {
-            //    f6m_mul(a, A, a, bls12_mod, bls12_r_inv, add(bls12_mod, 128)) 
-            //}
+            let f6m_scratch_spaace := add(f6m_result5, 384)
+
+            // just test one call
+            //f6m_mul(point1_a, point2_A, f6m_result1, bls12_mod, bls12_r_inv, f6m_scratch_spaace)
+
+            f6m_mul(point1_a, point2_A, f6m_result4, bls12_mod, bls12_r_inv, f6m_scratch_spaace)
+            f6m_mul(point1_a, f6m_result4, f6m_result5, bls12_mod, bls12_r_inv, f6m_scratch_spaace)
+
+            let i := 0
+            for {} lt(i, 135) {i := add(i, 1)} {
+                f6m_mul(f6m_result4, f6m_result5, f6m_result1, bls12_mod, bls12_r_inv, f6m_scratch_spaace)
+                f6m_mul(f6m_result5, f6m_result1, f6m_result2, bls12_mod, bls12_r_inv, f6m_scratch_spaace)
+                f6m_mul(f6m_result1, f6m_result2, f6m_result3, bls12_mod, bls12_r_inv, f6m_scratch_spaace)
+                f6m_mul(f6m_result2, f6m_result3, f6m_result4, bls12_mod, bls12_r_inv, f6m_scratch_spaace)
+                f6m_mul(f6m_result3, f6m_result4, f6m_result5, bls12_mod, bls12_r_inv, f6m_scratch_spaace)
+
+                f6m_mul(f6m_result4, f6m_result5, f6m_result1, bls12_mod, bls12_r_inv, f6m_scratch_spaace)
+                f6m_mul(f6m_result5, f6m_result1, f6m_result2, bls12_mod, bls12_r_inv, f6m_scratch_spaace)
+                f6m_mul(f6m_result1, f6m_result2, f6m_result3, bls12_mod, bls12_r_inv, f6m_scratch_spaace)
+                f6m_mul(f6m_result2, f6m_result3, f6m_result4, bls12_mod, bls12_r_inv, f6m_scratch_spaace)
+                f6m_mul(f6m_result3, f6m_result4, f6m_result5, bls12_mod, bls12_r_inv, f6m_scratch_spaace)
+            }
     }
+
+
+/*
+for a loop of 10, result should be:
+2cf104a6407a2e8ce662ca3dc99bd1e97c62896e29e1e8291980a7fa306fb27056a3132b5e4c6c20f73542329c263e11
+// 113e269c... (little endian)
+7d32a392d6e84c5a1919e67a5c1b1bfa1ff6cc88e550b4578b18745e9568078c3dfac3a48f61dfc225e4edd33882790b
+// 0b798238...
+c58f113de32445bb24260d6d7524850bf55cb511f92945f519a88dd5c7cce1c977eda1ca61365baf70342b2ab6ab2216
+// 1622abb6...
+e1726632f1f1113f56386497ad044f9da494cc6d38b28d8c6df1b43c6e00f2eec931518850e130678262c7c12f330804
+// 0408332fc1...
+d69dfeb1abd4b977994892df84b22abcc092d0858fcccff85a2a2e72802960254583702e3e367a76bfd476da2e013f04
+// 043f012eda...
+97a886f1a62bffb25b2d6722149ae489d3c0c94babac1d18dab10a6e15cb6d89e4f3b3cddb9262666a23ebbf20eff809
+// 09f8ef20bf...
+*/
+
+/*
+for a loop of 135, result should be:
+74229fc665e6c3f4401905c1a454ea57c8931739d05a074fd60400f19684d680a9e1305c25f13613dcc6cdd6e6e57d08
+//087de5... (little endian)
+66643d9f8c88aa618bbad33cfdd371c73a6378e4863e9b1368f79da18a0c6b5acb958e62ea89bbf52e40a34870ef8d04
+//048def70...
+511a414c750669a57a3f7e97e1d893240773e1c949b2c3eeeec9bd383087955052341dfff2ab76ea37efdda91005dc03
+//03dc0510a9...
+27ca26dff3265aa1e0ce3e8214b110d89a415996524226b1b0754135657ff01a3cc372830380986070f0f05c1a14dc04
+//04dc141a5c...
+f200f1e7c3f85d7cc7172d981654b827b60dced38b6f51ab8fb837669c310aaed71cfa12e470443ce9cbd8ec68c64005
+//0540c668ec...
+c4ec5f1698368dda3049991ea7d283af249b54f2e22006b8d7f9727dd160aff5af3f53dec4c586c5cd581bba6ef3dd0a
+//0addf36eba...
+*/
+
+
 
     test_f6m_mul()
 }
