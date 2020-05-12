@@ -19,7 +19,7 @@
     }
 
     // r <- x + y
-    function f2m_add(x_0, x_1, y_0, y_1, r_0, r_1, modulus, arena) {
+    function f2m_add(x_0, x_1, y_0, y_1, r_0, r_1, modulus) {
         memcpy_384(r_0, x_0)
         memcpy_384(r_1, x_1)
         addmod384(r_0, y_0, modulus)
@@ -27,7 +27,7 @@
     }
 
     // r <- x - y
-    function f2m_sub(x_0, x_1, y_0, y_1, r_0, r_1, modulus, arena) {
+    function f2m_sub(x_0, x_1, y_0, y_1, r_0, r_1, modulus) {
         memcpy_384(r_0, x_0)
         memcpy_384(r_1, x_1)
         submod384(r_0, y_0, modulus)
@@ -109,22 +109,22 @@
         */
 
         // tmp1 [a_c] <- a + c
-        f2m_add(abc, add(abc, 64), add(abc, 256), add(abc, 320), tmp1, add(tmp1, 64), modulus, arena)
+        f2m_add(abc, add(abc, 64), add(abc, 256), add(abc, 320), tmp1, add(tmp1, 64), modulus)
 
         // r_2 [A_C] <- A + C
-        f2m_add(ABC, add(ABC, 64), add(ABC, 256), add(ABC, 320), add(r, 256), add(r, 320), modulus, arena)
+        f2m_add(ABC, add(ABC, 64), add(ABC, 256), add(ABC, 320), add(r, 256), add(r, 320), modulus)
         
         // r_2 <- r_2 * tmp1 [a_c]
         f2m_mul(add(r, 256), add(r, 320), tmp1, add(tmp1, 64), add(r, 256), add(r, 320), modulus, inv, arena)
 
         // tmp1 [aA_cC] <- aA + cC
-        f2m_add(aA_0, aA_1, cC_0, cC_1, tmp1, add(tmp1, 64), modulus, arena)
+        f2m_add(aA_0, aA_1, cC_0, cC_1, tmp1, add(tmp1, 64), modulus)
 
         // r_2 <- r_2 - tmp1 [aA_cC]
-        f2m_sub(add(r, 256), add(r, 320), tmp1, add(tmp1, 64), add(r, 256), add(r, 320), modulus, arena)
+        f2m_sub(add(r, 256), add(r, 320), tmp1, add(tmp1, 64), add(r, 256), add(r, 320), modulus)
 
         // r_2 <- r_2 + bB
-        f2m_add(add(r, 256), add(r, 320), bB_0, bB_1, add(r, 256), add(r, 320), modulus, arena)
+        f2m_add(add(r, 256), add(r, 320), bB_0, bB_1, add(r, 256), add(r, 320), modulus)
 
         // return(add(r, 256), 128)
 
@@ -133,46 +133,46 @@
         */
 
         // tmp1 [a_b] <- a + b
-        f2m_add(abc, add(abc, 64), add(abc, 128), add(abc, 192), tmp1, add(tmp1, 64), modulus, arena)
+        f2m_add(abc, add(abc, 64), add(abc, 128), add(abc, 192), tmp1, add(tmp1, 64), modulus)
         
         // r_1 [A_B] <- A + B
-        f2m_add(ABC, add(ABC, 64), add(ABC, 128), add(ABC, 192), add(r, 128), add(r, 192), modulus, arena)
+        f2m_add(ABC, add(ABC, 64), add(ABC, 128), add(ABC, 192), add(r, 128), add(r, 192), modulus)
 
         // r_1 <- r_1 [A_B] * tmp1 [a_b]
         f2m_mul(add(r, 128), add(r, 192), tmp1, add(tmp1, 64), add(r, 128), add(r, 192), modulus, inv, arena)
 
         // tmp1 [aA_bB] <- aA * bB
-        f2m_add(aA_0, aA_1, bB_0, bB_1, tmp1, add(tmp1, 64), modulus, arena)
+        f2m_add(aA_0, aA_1, bB_0, bB_1, tmp1, add(tmp1, 64), modulus)
 
         // r_1 <- r_1 - tmp1 [aA_bB]
-        f2m_sub(add(r, 128), add(r, 192), tmp1, add(tmp1, 64), add(r, 128), add(r, 192), modulus, arena)
+        f2m_sub(add(r, 128), add(r, 192), tmp1, add(tmp1, 64), add(r, 128), add(r, 192), modulus)
 
         // tmp1 [AUX] <- mulNonResidue(cC)
         mulNR2(cC_0, cC_1, tmp1, add(tmp1, 64), modulus, arena)
 
         // r_1 <- r_1 + tmp1 [AUX]
-        f2m_add(add(r, 128), add(r, 192), tmp1, add(tmp1, 64), add(r, 128), add(r, 192), modulus, arena)
+        f2m_add(add(r, 128), add(r, 192), tmp1, add(tmp1, 64), add(r, 128), add(r, 192), modulus)
 
         /*
             r0 = aA + mulNonResidue((b + c) * (B + C)) - (b * B + c * C))
         */
 
         // r_0 [b_c] <- b + c
-        f2m_add(add(abc, 128), add(abc, 192), add(abc, 256), add(abc, 320), r, add(r, 64), modulus, arena)
+        f2m_add(add(abc, 128), add(abc, 192), add(abc, 256), add(abc, 320), r, add(r, 64), modulus)
 
         // tmp1 [B_C] <- B + C
-        f2m_add(add(ABC, 128), add(ABC, 192), add(ABC, 256), add(ABC, 320), tmp1, add(tmp1, 64),  modulus, arena)
+        f2m_add(add(ABC, 128), add(ABC, 192), add(ABC, 256), add(ABC, 320), tmp1, add(tmp1, 64),  modulus)
 
         // r_0 <- r_0 [b_c] * tmp1 [B_C]
         f2m_mul(r, add(r, 64), tmp1, add(tmp1, 64), r, add(r, 64), modulus, inv, arena)
 
         // tmp1 [bB_cC] <- bB + cC
-        f2m_add(bB_0, bB_1, cC_0, cC_1, tmp1, add(tmp1, 64), modulus, arena)
+        f2m_add(bB_0, bB_1, cC_0, cC_1, tmp1, add(tmp1, 64), modulus)
 
         // r_0 seems to be correctly calculated until the following statements
 
         // r_0 <- r_0 - tmp1 [bB_cC]
-        f2m_sub(r, add(r, 64), tmp1, add(tmp1, 64), r, add(r, 64), modulus, arena)
+        f2m_sub(r, add(r, 64), tmp1, add(tmp1, 64), r, add(r, 64), modulus)
 
         // return(r, 128)
         // ^ this line causes "stack too deep" error
@@ -181,7 +181,7 @@
         mulNR2(r, add(r, 64), r, add(r, 64), modulus, arena)
 
         // r_0 <- aA + r_0
-        f2m_add(r, add(r, 64), aA_0, aA_1, r, add(r, 64), modulus, arena)
+        f2m_add(r, add(r, 64), aA_0, aA_1, r, add(r, 64), modulus)
     }
 
     function test_f6m_mul() {
@@ -297,6 +297,8 @@
                 f6m_mul(f6m_result2, f6m_result3, f6m_result4, bls12_mod, bls12_r_inv, f6m_scratch_spaace)
                 f6m_mul(f6m_result3, f6m_result4, f6m_result5, bls12_mod, bls12_r_inv, f6m_scratch_spaace)
             }
+
+            return(f6m_result5, 64)
     }
 
 
