@@ -7,13 +7,15 @@
     }
 
     function mulNR2(x0, x1, r0, r1, modulus, arena) {
+        let x0c := arena
+        memcpy_384(x0c, x0) // copy x0 to x0c
         memcpy_384(r0, x0)
         memcpy_384(r1, x1)
 
         // r0 <- x0 - x1
         submod384(r0, x1, modulus)
         // r1 <- x0 + x1
-        addmod384(r1, x1, modulus)
+        addmod384(r1, x0c, modulus)
     }
 
     // r <- x + y
@@ -106,19 +108,19 @@
             r_2 <- ((a + c) * (A + C) - (a * A + c * C)) + bB
         */
 
-        // tmp1 <- a + c
+        // tmp1 [a_c] <- a + c
         f2m_add(abc, add(abc, 64), add(abc, 256), add(abc, 320), tmp1, add(tmp1, 64), modulus, arena)
 
-        // r_2 <- A + C
+        // r_2 [A_C] <- A + C
         f2m_add(ABC, add(ABC, 64), add(ABC, 256), add(ABC, 320), add(r, 256), add(r, 320), modulus, arena)
         
-        // r_2 <- r_2 * tmp1
+        // r_2 <- r_2 * tmp1 [a_c]
         f2m_mul(add(r, 256), add(r, 320), tmp1, add(tmp1, 64), add(r, 256), add(r, 320), modulus, inv, arena)
 
-        // tmp1 <- aA + cC
+        // tmp1 [aA_cC] <- aA + cC
         f2m_add(aA_0, aA_1, cC_0, cC_1, tmp1, add(tmp1, 64), modulus, arena)
 
-        // r_2 <- r_2 - tmp1
+        // r_2 <- r_2 - tmp1 [aA_cC]
         f2m_sub(add(r, 256), add(r, 320), tmp1, add(tmp1, 64), add(r, 256), add(r, 320), modulus, arena)
 
         // r_2 <- r_2 + bB
@@ -130,46 +132,46 @@
             r1 = ((a_b * A_B) - aA_bB) + mulNonResidue(cC)
         */
 
-        // tmp1 <- a + b
+        // tmp1 [a_b] <- a + b
         f2m_add(abc, add(abc, 64), add(abc, 128), add(abc, 192), tmp1, add(tmp1, 64), modulus, arena)
         
-        // r_1 <- A + B
+        // r_1 [A_B] <- A + B
         f2m_add(ABC, add(ABC, 64), add(ABC, 128), add(ABC, 192), add(r, 128), add(r, 192), modulus, arena)
 
-        // r_1 <- r_1 * tmp1
+        // r_1 <- r_1 [A_B] * tmp1 [a_b]
         f2m_mul(add(r, 128), add(r, 192), tmp1, add(tmp1, 64), add(r, 128), add(r, 192), modulus, inv, arena)
 
-        // tmp1 <- aA * bB
+        // tmp1 [aA_bB] <- aA * bB
         f2m_add(aA_0, aA_1, bB_0, bB_1, tmp1, add(tmp1, 64), modulus, arena)
 
-        // r_1 <- r_1 - tmp1
+        // r_1 <- r_1 - tmp1 [aA_bB]
         f2m_sub(add(r, 128), add(r, 192), tmp1, add(tmp1, 64), add(r, 128), add(r, 192), modulus, arena)
 
-        // tmp1 <- mulNonResidue(cC)
+        // tmp1 [AUX] <- mulNonResidue(cC)
         mulNR2(cC_0, cC_1, tmp1, add(tmp1, 64), modulus, arena)
 
-        // r_1 <- r_1 + tmp1
+        // r_1 <- r_1 + tmp1 [AUX]
         f2m_add(add(r, 128), add(r, 192), tmp1, add(tmp1, 64), add(r, 128), add(r, 192), modulus, arena)
 
         /*
             r0 = aA + mulNonResidue((b + c) * (B + C)) - (b * B + c * C))
         */
 
-        // r_0 <- b + c
+        // r_0 [b_c] <- b + c
         f2m_add(add(abc, 128), add(abc, 192), add(abc, 256), add(abc, 320), r, add(r, 64), modulus, arena)
 
-        // tmp1 <- B + C
+        // tmp1 [B_C] <- B + C
         f2m_add(add(ABC, 128), add(ABC, 192), add(ABC, 256), add(ABC, 320), tmp1, add(tmp1, 64),  modulus, arena)
 
-        // r_0 <- r_0 * tmp1
+        // r_0 <- r_0 [b_c] * tmp1 [B_C]
         f2m_mul(r, add(r, 64), tmp1, add(tmp1, 64), r, add(r, 64), modulus, inv, arena)
 
-        // tmp1 <- bB + cC
+        // tmp1 [bB_cC] <- bB + cC
         f2m_add(bB_0, bB_1, cC_0, cC_1, tmp1, add(tmp1, 64), modulus, arena)
 
         // r_0 seems to be correctly calculated until the following statements
 
-        // r_0 <- r_0 - tmp1
+        // r_0 <- r_0 - tmp1 [bB_cC]
         f2m_sub(r, add(r, 64), tmp1, add(tmp1, 64), r, add(r, 64), modulus, arena)
 
         // return(r, 128)
@@ -187,6 +189,7 @@
 
             /*
             p1 bytecode
+            these coords are in montgomery form
 
             8f2990f3e598f5b1b8f480a3c388306bc023fac151c0104d13ec3aa18159940272d1c8c528a1ce3bcaa280a8e735aa0d992d7a27906d4cd530b23a7e8c48c0778f8653fbc3332d63db24339d8bc65d7ee83b6e91c6550f5aceab102e88e918097299907146816f08c4c6a394e91374ed6ff3618a57358cfb124ee6ab4c560e5cac40700b41e2ee8674680728f0c5a6180fd77f62b39eb952a0f8d21cec1f93b1d62dd7923aa86882ddf7dd4d3532b0b7ede8f3fc89fa4a79574067e2d9a9d2007a69de46b13d8cb4c4833224aaf9ef7ea6a48975ab35c6e123b8539ab84c381a2533401a73c4e79f47d714899d01ac13a9fa0b0d8156c36a1a9ddacb73ef278f4d149b560e88789f2bfeb9f708b6cc2f988927bfe0186d5bf9cb40cb07f21b18
 
@@ -204,6 +207,25 @@
                 (('ecd347c808af644c7a3a971a556576f434e302b6b490004fb418a4a7da330a6743adeca931169b8b92e91df73ae1e115', '12a2829e11e843d764d5e3b80e75432d93f69b23ad79c38d43ebbc9bd2b17b9e903033351357b03602624762e5ad360d'), ('d7f9857dce663301f393f9fac66f5c49168494e0d20797a6c4f96327ed4fa47dd36d0078d217a712407d35046871d40f', '2f1b767f6c1ec190eb76a0bce7906ad2e4a7548d03e8aa745e34e1bf49d83ad64c04f57fb4d31039cb4cf01987fda213'), ('7b3f8da2f2ae47885890b0d433a3eeed2f9f37cbcfc444e4f1d880390fcdb76518d558857be01b2b10a8010bcdc6d606', '319c02f6132c8a786377868b5825ada9a5fe303e9ae3b03ce56e90734a17ce970c88b321012cf8dabb58211e3d50f610'))
 
             */
+
+            /*
+            expected result, in montgomery form (little endian):
+            f4f3f4e0a35068eaac665aee2e71f682aecd20923b420023b6d5420ba01ea98287c314107a998a650ab3247ef39c920e
+            // 0e929c.. (big endian)
+            2c9620d993a22bade623d165a9f4aa648af87cb7292b7821c0fcd0adcd14ba655da54df2ad93262e24fc62bcd97e7208
+            // 08727e...
+            ead1838e6c5e168543093c87eaeb576f940670026292dcb7a812600f4fb20a281be71ce1ef79f675e4a283b73906ca17
+            // 17ca06..
+            9c8b2c76405445b20dd7635d562309f69c2c87601d9055a5e10df2ea1d28237fafd0d32f7e8c19d4cd5a3d1ef65b120b
+            // 0b125b...
+            40591ef0c74dbec983b7bef145a87957c1e09049dbc85fbb3e9bb1174892ee83294ef8c4a5954fffbff4ca6aca74c718
+            // 18c774...
+            9b242b8f1c5d63bb525121bd68eda084ab7e6d015052d5adeb79ddb24091d2a8e5b1da00212d0e6c11f01d2379011308
+            // 081301...
+            */
+
+
+
 
             mstore(a,          0x8f2990f3e598f5b1b8f480a3c388306bc023fac151c0104d13ec3aa181599402)
             mstore(add(a, 32), 0x72d1c8c528a1ce3bcaa280a8e735aa0d00000000000000000000000000000000)
@@ -240,20 +262,27 @@
             mstore(add(C, 64), 0x319c02f6132c8a786377868b5825ada9a5fe303e9ae3b03ce56e90734a17ce97)
             mstore(add(C, 96), 0x0c88b321012cf8dabb58211e3d50f61000000000000000000000000000000000)
 
-            let r_0 := add(C, 128)
-            let r_1 := add(r_0, 128)
-            let r_2 := add(r_1, 128)
+            //let r_0 := add(C, 128)
+            let f6m_result := add(C, 128) // use a longer variable name ffs
+            //let r_1 := add(r_0, 128)
+            let f6m_result_r1 := add(f6m_result, 128) // to allocate more memory?
+            //let r_2 := add(r_1, 128)
+            let f6m_result_r2 := add(f6m_result_r1, 128) // to allocate more memory?
 
-            let bls12_mod := add(r_2, 128)
+            let bls12_mod := add(f6m_result_r2, 128)
             mstore(bls12_mod,          0xabaafffffffffeb9ffff53b1feffab1e24f6b0f6a0d23067bf1285f3844b7764)
             mstore(add(bls12_mod, 32), 0xd7ac4b43b6a71b4b9ae67f39ea11011a00000000000000000000000000000000)
 
             let bls12_r_inv :=         0x89f3fffcfffcfffd
 
-            let i := 0
-            for {} lt(i, 135) {i := add(i, 1)} {
-                f6m_mul(a, A, a, bls12_mod, bls12_r_inv, add(bls12_mod, 128)) 
-            }
+
+            // just test one call
+            f6m_mul(a, A, f6m_result, bls12_mod, bls12_r_inv, add(bls12_mod, 128)) 
+
+            //let i := 0
+            //for {} lt(i, 135) {i := add(i, 1)} {
+            //    f6m_mul(a, A, a, bls12_mod, bls12_r_inv, add(bls12_mod, 128)) 
+            //}
     }
 
     test_f6m_mul()
