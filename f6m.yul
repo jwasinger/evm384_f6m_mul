@@ -6,32 +6,25 @@
         mstore(add(dst, 32), lo)
     }
 
-    function mulNR2(x0, x1, r0, r1, modulus, arena) {
-        let x0c := arena
-        memcpy_384(x0c, x0) // copy x0 to x0c
-        memcpy_384(r0, x0)
-        memcpy_384(r1, x1)
-
+    function mulNR2(x0, x1, r0, r1, modulus) {
         // r0 <- x0 - x1
-        submod384(r0, x1, modulus)
+        submod384(r0, x0, x1, modulus)
         // r1 <- x0 + x1
-        addmod384(r1, x0c, modulus)
+        addmod384(r1, x0, x1, modulus)
     }
 
     // r <- x + y
     function f2m_add(x_0, x_1, y_0, y_1, r_0, r_1, modulus, arena) {
-        memcpy_384(r_0, x_0)
-        memcpy_384(r_1, x_1)
-        addmod384(r_0, y_0, modulus)
-        addmod384(r_1, y_1, modulus)
+        addmod384(r_0, x_0, y_0, modulus)
+        addmod384(r_1, y_0, y_1, modulus)
     }
 
     // r <- x - y
     function f2m_sub(x_0, x_1, y_0, y_1, r_0, r_1, modulus, arena) {
         memcpy_384(r_0, x_0)
         memcpy_384(r_1, x_1)
-        submod384(r_0, y_0, modulus)
-        submod384(r_1, y_1, modulus)
+        submod384(r_0, x_0, y_0, modulus)
+        submod384(r_1, y_0, y_1, modulus)
     }
 
     // r <- x * y
@@ -77,6 +70,60 @@
 
         // r_1 <- C
         memcpy_384(r_1, C)
+
+        /*
+        A <- x_0 * y_0
+        B <- x_1 * y_1
+        D <- y_0 + y_1
+
+        B <- x_1 * y_1
+
+        C <- x_0 + x_1
+        C <- D * C
+        C <- C - B
+
+        r_0 <- (0 - (x_1 * y_1)) + (x_0 * y_0)
+        r_1 <- ((y_0 + y_1) * (x_0 + x_1)) - (x_1 * y_1)
+        */
+
+
+        /*
+        r0 <- mulNR(x1y1)
+        r0 <- r0 + x0y0
+        
+        r1 <- y0_y1
+        r1 <- r1 * x0x1
+        r1 <- r1 - x1y1
+        */
+        
+        let tmp = add(mem, 64)
+        let tmp2 = add(tmp, 64)
+
+        // r0 = x1y1
+        mulmodmont(r0, x_1, y_1, modulus, inv)
+
+        //r0 = mulNR(tmp)
+        mulNR(r0, tmp, modulus)
+
+        // tmp = x0y0
+        mulmodmont384(tmp, x0, y0, modulus, inv)
+
+        //r0 = r0 + tmp (x0y0)
+        addmod384(r0, tmp, modulus)
+
+        // r1 -------------------------------------
+
+        // tmp = y0 + y1
+        addmod384(tmp, y0, y1, modulus)
+
+        // tmp2 = x0 * x1
+        mulmodmont384(tmp2, x0, x1, modulus)
+
+        // r1 <- tmp (y0_y1) + tmp2(x0x1)
+        addmod384(r1, tmp, tmp2, modulus)
+
+        // r1 = r1 - tmp
+        submod384(r1, r1, tmp, modulus)
     }
 
     // {r_0, r_1, r_2} <- {a, b, c} * {A, B, C}
