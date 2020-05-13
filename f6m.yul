@@ -7,13 +7,15 @@
     }
 
     function mulNR2(x0, x1, r0, r1, modulus, arena) {
+        let x0c := arena
+        memcpy_384(x0c, x0) // copy x0 to x0c
         memcpy_384(r0, x0)
         memcpy_384(r1, x1)
 
         // r0 <- x0 - x1
         submod384(r0, x1, modulus)
         // r1 <- x0 + x1
-        addmod384(r1, x1, modulus)
+        addmod384(r1, x0c, modulus)
     }
 
     // r <- x + y
@@ -262,7 +264,13 @@
             }
 
             // check r_0_1
-            // currently incorrect
+            if eq(eq(mload(add(r_0, 64)), 0x2c9620d993a22bade623d165a9f4aa648af87cb7292b7821c0fcd0adcd14ba65), false) {
+                revert(0,0)
+            }
+
+            if eq(eq(mload(add(r_0, 96)), 0x5da54df2ad93262e24fc62bcd97e720800000000000000000000000000000000), false) {
+                revert(0,0)
+            }
 
             // check r_1_0
             if eq(eq(mload(r_1), 0xead1838e6c5e168543093c87eaeb576f940670026292dcb7a812600f4fb20a28), false) {
@@ -273,8 +281,14 @@
                 revert(0,0)
             }
 
-            // check r_1_1
-            // currently incorrect
+            // check r_1_1 ==            0x9c8b2c76405445b20dd7635d562309f69c2c87601d9055a5e10df2ea1d28237fafd0d32f7e8c19d4cd5a3d1ef65b120b
+            if eq(eq(mload(add(r_1, 64)), 0x9c8b2c76405445b20dd7635d562309f69c2c87601d9055a5e10df2ea1d28237f), false) {
+                revert(0,0)
+            }
+
+            if eq(eq(mload(add(r_1, 96)), 0xafd0d32f7e8c19d4cd5a3d1ef65b120b00000000000000000000000000000000), false) {
+                revert(0,0)
+            }
 
             // r_2_0 == 0x40591ef0c74dbec983b7bef145a87957c1e09049dbc85fbb3e9bb1174892ee83294ef8c4a5954fffbff4ca6aca74c718
             if eq(eq(mload(r_2), 0x40591ef0c74dbec983b7bef145a87957c1e09049dbc85fbb3e9bb1174892ee83), false) {
