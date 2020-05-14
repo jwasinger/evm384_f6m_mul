@@ -28,49 +28,7 @@
     }
 
     // r <- x * y
-    function f2m_mul(x_0_offset, x_1_offset, y_0_offset, y_1_offset, r_0, r_1, modulus, inv, mem) {
-        let A := mem
-        let B := add(mem, 64)
-        let C := add(B, 64)
-        let D := add(C, 64)
-
-        // A <- x_0 * y_0
-        memcpy_384(A, x_0_offset)
-        mulmodmont384(A, y_0_offset, modulus, inv)
-
-        // B <- x_1 * y_1
-        memcpy_384(B, x_1_offset)
-        mulmodmont384(B, y_1_offset, modulus, inv)
-
-        // C <- x_0 + x_1
-        memcpy_384(C, x_0_offset)
-        addmod384(C, x_1_offset, modulus)
-
-        // D <- y_0 + y_1
-        memcpy_384(D, y_0_offset)
-        addmod384(D, y_1_offset, modulus)
-
-        // C <- D * C
-        mulmodmont384(C, D, modulus, inv)
-
-        // f1m_mulNonresidue = f1m_neg(val) = 0 - val 
-        // r_0 <- 0 - B
-        mstore(r_0,          0x0000000000000000000000000000000000000000000000000000000000000000)
-        mstore(add(r_0, 32), 0x0000000000000000000000000000000000000000000000000000000000000000)
-        submod384(r_0, B, modulus)
-
-        // r_0 <- r_0 + A
-        addmod384(r_0, A, modulus)
-
-        // B <- A + B
-        addmod384(B, A, modulus)
-
-        // C <- C - B 
-        submod384(C, B, modulus)
-
-        // r_1 <- C
-        memcpy_384(r_1, C)
-
+    function f2m_mul(x0, x1, y0, y1, r0, r1, modulus, inv, mem) {
         /*
         A <- x_0 * y_0
         B <- x_1 * y_1
@@ -96,20 +54,22 @@
         r1 <- r1 - x1y1
         */
         
-        let tmp = add(mem, 64)
-        let tmp2 = add(tmp, 64)
+        let tmp := add(mem, 64)
+        let tmp2 := add(tmp, 64)
+        let zero := add(tmp2, 64)
 
         // r0 = x1y1
-        mulmodmont(r0, x_1, y_1, modulus, inv)
+        mulmodmont384(r0, x1, y1, modulus, inv)
 
         //r0 = mulNR(tmp)
-        mulNR(r0, tmp, modulus)
+        submod384(r0, zero, tmp, modulus)
+
 
         // tmp = x0y0
         mulmodmont384(tmp, x0, y0, modulus, inv)
 
         //r0 = r0 + tmp (x0y0)
-        addmod384(r0, tmp, modulus)
+        addmod384(r0, r0, tmp, modulus)
 
         // r1 -------------------------------------
 
@@ -117,7 +77,7 @@
         addmod384(tmp, y0, y1, modulus)
 
         // tmp2 = x0 * x1
-        mulmodmont384(tmp2, x0, x1, modulus)
+        mulmodmont384(tmp2, x0, x1, modulus, inv)
 
         // r1 <- tmp (y0_y1) + tmp2(x0x1)
         addmod384(r1, tmp, tmp2, modulus)
@@ -195,7 +155,7 @@
         f2m_sub(add(r, 128), add(r, 192), tmp1, add(tmp1, 64), add(r, 128), add(r, 192), modulus, arena)
 
         // tmp1 <- mulNonResidue(cC)
-        mulNR2(cC_0, cC_1, tmp1, add(tmp1, 64), modulus, arena)
+        mulNR2(cC_0, cC_1, tmp1, add(tmp1, 64), modulus)
 
         // r_1 <- r_1 + tmp1
         f2m_add(add(r, 128), add(r, 192), tmp1, add(tmp1, 64), add(r, 128), add(r, 192), modulus, arena)
@@ -225,7 +185,7 @@
         // ^ this line causes "stack too deep" error
 
         // r_0 <- mulNonResidue(r_0)
-        mulNR2(r, add(r, 64), r, add(r, 64), modulus, arena)
+        mulNR2(r, add(r, 64), r, add(r, 64), modulus)
 
         // r_0 <- aA + r_0
         f2m_add(r, add(r, 64), aA_0, aA_1, r, add(r, 64), modulus, arena)
