@@ -58,11 +58,13 @@
         let tmp2 := add(tmp, 64)
         let zero := add(tmp2, 64)
 
-        // r0 = x1y1
-        mulmodmont384(r0, x1, y1, modulus, inv)
+        // TODO also cache x0y0 calculation
 
-        //r0 = mulNR(tmp)
-        submod384(r0, zero, tmp, modulus)
+        // tmp2 = x1y1
+        mulmodmont384(tmp2, x1, y1, modulus, inv)
+
+        //r0 = mulNR(tmp2)
+        submod384(r0, zero, tmp2, modulus)
 
         // tmp = x0y0
         mulmodmont384(tmp, x0, y0, modulus, inv)
@@ -72,17 +74,25 @@
 
         // r1 -------------------------------------
 
+        // r1 = ((y0 + y1) * (x0 + x1)) - ((x0 * y0) + (x1 * y1))
+
+        // tmp2 <- x1 * y1
+        mulmodmont384(tmp2, x1, y1, modulus, inv)
+
+        // tmp2 <- tmp (x0 * y0) + tmp2 (x1 * y1)
+        addmod384(tmp2, tmp, tmp2, modulus)
+
         // tmp = y0 + y1
         addmod384(tmp, y0, y1, modulus)
 
-        // tmp2 = x0 * x1
-        mulmodmont384(tmp2, x0, x1, modulus, inv)
+        // r1 = x0 + x1
+        addmod384(r1, x0, x1, modulus)
 
-        // r1 <- tmp (y0_y1) + tmp2(x0x1)
-        addmod384(r1, tmp, tmp2, modulus)
+        // r1 <- r1 (x0 + x1) * tmp (y0 + y1)
+        mulmodmont384(r1, r1, tmp, modulus, inv)
 
-        // r1 = r1 - tmp
-        submod384(r1, r1, tmp, modulus)
+        // r1 = r1 [(x0 + x1) * (y0 + y1)] - tmp2 [(x0 * y0) + (x1 * y1)]
+        submod384(r1, r1, tmp2, modulus)
     }
 
     // {r_0, r_1, r_2} <- {a, b, c} * {A, B, C}
@@ -319,14 +329,13 @@
             }
     }
 
+
     function test_f2m_mul() {
     /*
         8f2990f3e598f5b1b8f480a3c388306bc023fac151c0104d13ec3aa18159940272d1c8c528a1ce3bcaa280a8e735aa0d992d7a27906d4cd530b23a7e8c48c0778f8653fbc3332d63db24339d8bc65d7ee83b6e91c6550f5aceab102e88e918097299907146816f08c4c6a394e91374ed6ff3618a57358cfb124ee6ab4c560e5cac40700b41e2ee8674680728f0c5a618 *
         ecd347c808af644c7a3a971a556576f434e302b6b490004fb418a4a7da330a6743adeca931169b8b92e91df73ae1e11512a2829e11e843d764d5e3b80e75432d93f69b23ad79c38d43ebbc9bd2b17b9e903033351357b03602624762e5ad360dd7f9857dce663301f393f9fac66f5c49168494e0d20797a6c4f96327ed4fa47dd36d0078d217a712407d35046871d40f =
 
         1a984f235709ab3941e22b5e67d5ba892ce9242e227c0c6bb38aa1ace4d4b64aaba753d350d98f4c05570f525d67a901b1297e4e9ca0c757dfe693ea0d2f5216daeaa4ad06964e2f7c242200049d386d860b25d4718a2c4240fb89c90abe4e10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-
-        let x := 
     */
             let mem := msize()
 
@@ -352,6 +361,22 @@
             let r := add(y, 128)
 
             f2m_mul(x, add(x, 64), y, add(y, 64), r, add(r, 64), bls12_mod, bls12_r_inv, add(r, 128))
+
+            if eq(eq(mload(r), 0x1a984f235709ab3941e22b5e67d5ba892ce9242e227c0c6bb38aa1ace4d4b64a), false) {
+                revert(0,0)
+            }
+
+            if eq(eq(mload(add(r, 32)), 0xaba753d350d98f4c05570f525d67a90100000000000000000000000000000000), false) {
+                revert(0,0)
+            }
+
+            if eq(eq(mload(add(r, 64)), 0xb1297e4e9ca0c757dfe693ea0d2f5216daeaa4ad06964e2f7c242200049d386d), false) {
+                revert(0,0)
+            }
+
+            if eq(eq(mload(add(r, 96)), 0x860b25d4718a2c4240fb89c90abe4e1000000000000000000000000000000000), false) {
+                revert(0,0)
+            }
     }
 
     //test_f6m_mul()
