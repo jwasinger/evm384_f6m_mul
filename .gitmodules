@@ -6,4 +6,4 @@
 	url = https://github.com/axic/evmone
 [submodule "solidity"]
 	path = solidity
-	url = https://github.com/ethereum/solidity
+	url = https://github.com/jwasinger/solidity
