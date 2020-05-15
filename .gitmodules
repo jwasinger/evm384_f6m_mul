@@ -3,7 +3,7 @@
 	url = https://github.com/ethereum/evmc
 [submodule "evmone"]
 	path = evmone
-	url = https://github.com/axic/evmone
+	url = https://github.com/jwasinger/evmone
 [submodule "solidity"]
 	path = solidity
-	url = https://github.com/ethereum/solidity
+	url = https://github.com/jwasinger/solidity
