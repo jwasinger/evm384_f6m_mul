@@ -27,30 +27,6 @@
 
     // r <- x * y
     function f2m_mul(x, y, r, modulus, inv, mem) {
-        /*
-        A <- x_0 * y_0
-        B <- x_1 * y_1
-        D <- y_0 + y_1
-
-        B <- x_1 * y_1
-
-        C <- x_0 + x_1
-        C <- D * C
-        C <- C - B
-
-        r_0 <- (0 - (x_1 * y_1)) + (x_0 * y_0)
-        r_1 <- ((y_0 + y_1) * (x_0 + x_1)) - (x_1 * y_1)
-        */
-
-
-        /*
-        r0 <- mulNR(x1y1)
-        r0 <- r0 + x0y0
-        
-        r1 <- y0_y1
-        r1 <- r1 * x0x1
-        r1 <- r1 - x1y1
-        */
         
         let tmp := add(mem, 64)
         let tmp2 := add(tmp, 64)
@@ -93,7 +69,7 @@
         submod384(add(r, 64), add(r, 64), tmp2, modulus)
     }
 
-    function f6m_mul_r2(abc, ABC,bB,aA,cC,r2, modulus, inv, mem) {
+    function f6m_mul_r2(abc, ABC,aA,bB,cC,r2, modulus, inv, mem) {
         /* 
             r_2 <- ((a + c) * (A + C) - (a * A + c * C)) + bB
         */
@@ -110,17 +86,11 @@
         // tmp2 <- A + C
         f2m_add(ABC, add(ABC, 64), add(ABC, 256), add(ABC, 320), tmp2, add(tmp2, 64), modulus, arena)
 
-        //return(tmp2, 128)
-
         // tmp3 <- tmp1 * tmp2
         f2m_mul(tmp1, tmp2, tmp3, modulus, inv, arena)
 
-        //return(tmp3, 128)
-
         // tmp1 <- aA + cC
         f2m_add(aA, add(aA, 64), cC, add(cC, 64), tmp1, add(tmp1, 64), modulus, arena)
-
-        //return(tmp1, 128)
 
         // tmp2 <- tmp3 - tmp1
         f2m_sub(tmp3, add(tmp3, 64), tmp1, add(tmp1, 64), tmp2, add(tmp2, 64), modulus, arena)
@@ -148,8 +118,6 @@
         // tmp3 <- tmp2 * tmp1
         f2m_mul(tmp2, tmp1, tmp3, modulus, inv, arena)
 
-        return(tmp3, 128)
-
         // tmp1 <- aA * bB
         f2m_add(aA, add(aA, 64), bB, add(bB, 64), tmp1, add(tmp1, 64), modulus, arena)
 
@@ -161,8 +129,6 @@
 
         // r_1 <- tmp2 + tmp1
         f2m_add(tmp2, add(tmp2, 64), tmp1, add(tmp1, 64), r1, add(r1, 64), modulus, arena)
-
-        return(r1, 128)
     }
 
     function f6m_mul_r0(abc, ABC, aA, bB, cC, r0, modulus, inv, mem) {
@@ -197,12 +163,10 @@
     // {r_0, r_1, r_2} <- {a, b, c} * {A, B, C}
     function f6m_mul(abc, ABC, r, modulus, inv, arena) {
         let aA := arena
-        let bB := add(aA, 64)
-        let cC := add(bB, 64)
+        let bB := add(aA, 128)
+        let cC := add(bB, 128)
 
-        let tmp1 := add(cC, 64)
-
-        arena := add(tmp1, 128)
+        arena := add(cC, 128)
         // all memory after 'arena' should be unused
 
         // aA <- a * A
@@ -214,11 +178,9 @@
         // cC <- c * C
         f2m_mul(add(abc, 256), add(ABC, 256), cC, modulus, inv, arena)
 
-        f6m_mul_r2(abc, ABC, bB, aA, cC, add(r, 256), modulus, inv, arena)
+        f6m_mul_r2(abc, ABC, aA, bB, cC, add(r, 256), modulus, inv, arena)
         f6m_mul_r1(abc, ABC, aA, bB, cC, add(r, 128), modulus, inv, arena)
-        f6m_mul_r1(abc, ABC, aA, bB, cC, r, modulus, inv, arena)
-
-        return(add(r, 256), 128)
+        f6m_mul_r0(abc, ABC, aA, bB, cC, r, modulus, inv, arena)
     }
 
     function test_f6m_mul() {
@@ -296,9 +258,6 @@
             if eq(eq(mload(r_0), 0xf4f3f4e0a35068eaac665aee2e71f682aecd20923b420023b6d5420ba01ea982), false) {
                 revert(0,32)
             }
-            */
-
-            return(r_0, 32)
 
             if eq(eq(mload(add(r_0, 32)), 0x87c314107a998a650ab3247ef39c920e00000000000000000000000000000000), false) {
                 revert(0,0)
@@ -312,6 +271,7 @@
             if eq(eq(mload(add(r_0, 96)), 0x5da54df2ad93262e24fc62bcd97e720800000000000000000000000000000000), false) {
                 revert(0,0)
             }
+            */
 
             // check r_1_0
             if eq(eq(mload(r_1), 0xead1838e6c5e168543093c87eaeb576f940670026292dcb7a812600f4fb20a28), false) {
