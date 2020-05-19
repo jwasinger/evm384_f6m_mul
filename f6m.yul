@@ -133,7 +133,7 @@
 
     function f6m_mul_r0(abc, ABC, aA, bB, cC, r0, modulus, inv, mem) {
         /*
-            r0 = aA + mulNonResidue((b + c) * (B + C)) - (b * B + c * C))
+            r0 = aA + mulNonResidue((b + c) * (B + C) - (b * B + c * C))
         */
 
         let tmp1 := mem
@@ -156,8 +156,11 @@
         // tmp2 <- tmp3 - tmp1
         f2m_sub(tmp3, add(tmp3, 64), tmp1, add(tmp1, 64), tmp2, add(tmp2, 64), modulus, arena)
 
-        // r0 <- tmp2 + aA
-        f2m_add(tmp2, add(tmp2, 64), aA, add(aA, 64), r0, add(r0, 64), modulus, arena)
+        // tmp3 <- mulnonresidue(tmp2)
+        mulNR2(tmp2, add(tmp2, 64), tmp3, add(tmp3, 64), modulus)
+
+        // r0 <- tmp3 + aA
+        f2m_add(tmp3, add(tmp3, 64), aA, add(aA, 64), r0, add(r0, 64), modulus, arena)
     }
 
     // {r_0, r_1, r_2} <- {a, b, c} * {A, B, C}
@@ -254,7 +257,6 @@
             f6m_mul(a, A, r_0, bls12_mod, bls12_r_inv, add(bls12_mod, 128)) 
 
             // check r_0_0
-            /*
             if eq(eq(mload(r_0), 0xf4f3f4e0a35068eaac665aee2e71f682aecd20923b420023b6d5420ba01ea982), false) {
                 revert(0,32)
             }
@@ -271,7 +273,6 @@
             if eq(eq(mload(add(r_0, 96)), 0x5da54df2ad93262e24fc62bcd97e720800000000000000000000000000000000), false) {
                 revert(0,0)
             }
-            */
 
             // check r_1_0
             if eq(eq(mload(r_1), 0xead1838e6c5e168543093c87eaeb576f940670026292dcb7a812600f4fb20a28), false) {
