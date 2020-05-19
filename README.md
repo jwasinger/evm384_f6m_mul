@@ -14,5 +14,5 @@ git submodule update --init --recursive
 (cd solidity && mkdir build && cd build && cmake .. && make -j4)
 ```
 
-### Build and benchmar`f6m_mul`:
+### Build and benchmark `f6m_mul`:
 `python3 benchmark.py`

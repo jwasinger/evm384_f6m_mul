@@ -1,4 +1,3 @@
-#! /usr/bin/env bash
 import os
 import subprocess
 import sys
